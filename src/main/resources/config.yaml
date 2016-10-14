@@ -1,0 +1,24 @@
+# Dataverse API configuration
+dataverse:
+  url: https://datasets.socialhistory.org
+  connectTimeoutMs: 5000
+  readTimeoutMs: 10000
+
+# Fields of the CSV
+fields:
+  UID: "Record identifier"
+  TYPEID: "Coin type identifier"
+  SOURCE: "Source of record"
+  MINT: "Location of mint house"
+  REGION: "Authority coin issuer"
+  DATE: "Minting period"
+  DATEfrom: "Minting period"
+  DATEto: "Minting period"
+  CoinNAME: "Name of coin"
+  ALLOY: "Type of metal"
+  VALUEd: "Value in deniers"
+  QTTYcoins: "No. of coints minted"
+  FINEness: "Purity"
+  WEIGHTraw: "Troy mark weight (all materials)"
+  WEIGHTfine: "Troy mark weight (fine metal)"
+  TAILLE: "No. of coins in a Troy mark"

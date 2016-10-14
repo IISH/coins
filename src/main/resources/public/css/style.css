@@ -1,0 +1,37 @@
+.page-header {
+    text-align: center;
+    margin: 0 0 25px 0;
+}
+
+.tab-content {
+    margin: 15px;
+}
+
+.btn-group-xs>.btn, .btn-xs {
+    margin-top: 5px;
+}
+
+.text-criteria, .number-criteria {
+    display: inline;
+}
+
+.typeahead {
+    max-height: 200px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.form-horizontal .checkbox {
+    padding-top: 0;
+    font-size: 11px;
+    line-height: 1.9;
+    text-align: center;
+}
+
+.panel-title {
+    font-size: 14px;
+}
+
+#table tbody tr:hover {
+    cursor: pointer;
+}
