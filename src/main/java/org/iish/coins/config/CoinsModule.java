@@ -38,7 +38,7 @@ public class CoinsModule extends AbstractModule {
     @Singleton
     public Config providesConfig() {
         try {
-            String configPath = System.getProperty("config");
+            String configPath = System.getProperty("coins.config");
             LOGGER.info("Loading configuration from {}.", configPath);
 
             Yaml yaml = new Yaml(new Constructor(Config.class));
@@ -58,7 +58,7 @@ public class CoinsModule extends AbstractModule {
     @Singleton
     public List<Record> providesData() {
         try {
-            String dataPath = System.getProperty("data");
+            String dataPath = System.getProperty("coins.data");
             LOGGER.info("Loading data from {}.", dataPath);
 
             return new Csv().parse(new FileInputStream(dataPath));
