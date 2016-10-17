@@ -14,6 +14,7 @@ import javax.inject.Singleton;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -57,14 +58,15 @@ public class CoinsModule extends AbstractModule {
     @Provides
     @Singleton
     public List<Record> providesData() {
-        try {
-            String dataPath = System.getProperty("coins.data");
-            LOGGER.info("Loading data from {}.", dataPath);
+       // try {
+            //String dataPath = System.getProperty("coins.data");
+            //LOGGER.info("Loading data from {}.", dataPath);
 
-            return new Csv().parse(new FileInputStream(dataPath));
-        } catch (IOException e) {
-            LOGGER.error("Failed to load the data!", e);
-            throw new RuntimeException(e);
-        }
+            //return new Csv().parse(new FileInputStream(dataPath));
+            return new ArrayList<>();
+        //} catch (IOException e) {
+         //   LOGGER.error("Failed to load the data!", e);
+          //  throw new RuntimeException(e);
+        //}
     }
 }
