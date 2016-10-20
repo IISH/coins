@@ -392,7 +392,7 @@
                 var qttyCoins = (row.QTTYcoins !== undefined) ? row.QTTYcoins : totalDays;
                 if (xVariable === 'year') {
                     qttyCoins = (qttyCoins / row.totalDays) * totalDays;
-                    if (divideByDaysFields.indexOf(variable) >= 0)
+                    if (divideByDaysFields.indexOf(yVariable) >= 0)
                         totals = (totals / row.totalDays) * totalDays;
                 }
 
