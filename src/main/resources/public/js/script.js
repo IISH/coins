@@ -8,6 +8,7 @@
     var numberFields = ["VALUEd", "QTTYcoins", "FINEness", "WEIGHTraw", "WEIGHTfine", "TAILLE"];
 
     var divideByDaysFields = ["QTTYcoins", "WEIGHTraw", "WEIGHTfine"];
+    var divideByQttFields = ["VALUEd", "FINEness", "TAILLE"];
     var variablesOfInterestFields = ["TYPEID", "MINT", "REGION", "DATEfrom", "DATEto", "CoinNAME", "ALLOY", "VALUEd", "QTTYcoins", "FINEness", "WEIGHTraw", "WEIGHTfine", "TAILLE"];
 
     var tableColumns = $('#tableColumns');
@@ -351,7 +352,8 @@
     }
 
     function getChartData(data, xVariable, yVariable, valueVariable) {
-        var chartData = {};
+        var chartDataWithTotals = {};
+
         data.forEach(function (row) {
             if (((xVariable === 'year') && row.totalDaysPerYear) || row[xVariable]) {
                 var totalsForRow = {};
@@ -372,33 +374,59 @@
                     else if ((typeof row[yVariable] === 'string') && (row[yVariable].length > 0))
                         totalsForRow[category] = 1;
 
-
                     if (xVariable === 'year') {
                         forEachInObject(row.totalDaysPerYear, function (year, totalDays) {
-                            addToObject(chartData, year, {});
-                            forEachInObject(totalsForRow, function (variable, totals) {
-                                if (divideByDaysFields.indexOf(variable) >= 0) {
-                                    totals = (totals / row.totalDays) * totalDays;
-                                    if (variable === 'QTTYcoins')
-                                        totals = Math.round(totals);
-                                }
-                                addToObject(chartData[year], variable, totals, function (val) {
-                                    return val + totals;
-                                })
-                            });
+                            addChartData(totalsForRow, row, year, totalDays);
                         });
                     }
                     else {
-                        addToObject(chartData, row[xVariable], {});
-                        forEachInObject(totalsForRow, function (variable, totals) {
-                            addToObject(chartData[row[xVariable]], variable, totals, function (val) {
-                                return val + totals;
-                            })
-                        });
+                        addChartData(totalsForRow, row, row[xVariable], row.totalDays);
                     }
                 }
             }
         });
+
+        function addChartData(totalsForRow, row, key, totalDays) {
+            addToObject(chartDataWithTotals, key, {});
+            forEachInObject(totalsForRow, function (variable, totals) {
+                var qttyCoins = (row.QTTYcoins !== undefined) ? row.QTTYcoins : totalDays;
+                if (xVariable === 'year') {
+                    qttyCoins = (qttyCoins / row.totalDays) * totalDays;
+                    if (divideByDaysFields.indexOf(variable) >= 0)
+                        totals = (totals / row.totalDays) * totalDays;
+                }
+
+                var totalsObj = {total: totals, qtty: qttyCoins};
+                addToObject(chartDataWithTotals[key], variable, [totalsObj], function (val) {
+                    val.push(totalsObj);
+                    return val;
+                })
+            });
+        }
+
+        var chartData = {};
+        forEachInObject(chartDataWithTotals, function (x, variables) {
+            addToObject(chartData, x, {});
+            forEachInObject(variables, function (variable, totals) {
+                var total = 0, totalQtty = 0;
+                totals.forEach(function (totalObj) {
+                    if (divideByQttFields.indexOf(variable) >= 0) {
+                        total += totalObj.total * totalObj.qtty;
+                        totalQtty += totalObj.qtty;
+                    }
+                    else {
+                        total += totalObj.total;
+                    }
+                });
+
+                chartData[x][variable] = (divideByQttFields.indexOf(variable) >= 0) ? (total / totalQtty) : total;
+                if (variable === 'QTTYcoins')
+                    chartData[x][variable] = Math.round(chartData[x][variable]);
+                else
+                    chartData[x][variable] = Math.round(chartData[x][variable] * 1000) / 1000;
+            });
+        });
+
         return chartData;
     }
 
