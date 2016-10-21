@@ -410,7 +410,7 @@
             forEachInObject(variables, function (variable, totals) {
                 var total = 0, totalQtty = 0;
                 totals.forEach(function (totalObj) {
-                    if (divideByQttFields.indexOf(variable) >= 0) {
+                    if (divideByQttFields.indexOf(yVariable) >= 0) {
                         total += totalObj.total * totalObj.qtty;
                         totalQtty += totalObj.qtty;
                     }
@@ -419,7 +419,7 @@
                     }
                 });
 
-                chartData[x][variable] = (divideByQttFields.indexOf(variable) >= 0) ? (total / totalQtty) : total;
+                chartData[x][variable] = (divideByQttFields.indexOf(yVariable) >= 0) ? (total / totalQtty) : total;
                 if (variable === 'QTTYcoins')
                     chartData[x][variable] = Math.round(chartData[x][variable]);
                 else
