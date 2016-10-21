@@ -13,7 +13,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
 
-    <packaging>war</packaging>
+    <!--<packaging>war</packaging>-->
 
     <dependencies>
         <dependency>
@@ -85,7 +85,7 @@
                             <transformers>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>org.iish.org.iish.coins.Application</mainClass>
+                                    <mainClass>org.iish.coins.Application</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>
