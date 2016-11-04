@@ -11,15 +11,21 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Reads and writes the CSV with records.
  */
 public class Csv {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("d-M-u");
-    private static final Object[] HEADERS = {"UID", "TYPEID", "SOURCE", "MINT", "REGION", "DATEfrom", "DATEto",
-            "CoinNAME", "ALLOY", "VALUEd", "QTTYcoins", "FINEness", "WEIGHTraw", "WEIGHTfine", "TAILLE"};
+
+    private static final Object[] HEADERS = {"UID", "TYPEID", "SOURCE", "MINT", "AUTHORITY", "DATEfrom", "DATEto",
+            "CoinNAME", "ALLOY", "VALUEd", "QTTYcoins", "FINEness", "WEIGHTraw", "WEIGHTfine", "TAILLE",
+            "AUTHORITY_SUPRA", "ALT_CoinNAME", "ALT_TYPEID", "VALUE_HourlyWAGE"};
+
     private static final CSVFormat CSV_FORMAT = CSVFormat.EXCEL
             .withFirstRecordAsHeader()
             .withDelimiter(';')
@@ -27,22 +33,26 @@ public class Csv {
             .withNullString("");
 
     /**
-     * Parses the given CSV.
+     * Parses the given coins CSV with extra data from the wages CSV.
      *
-     * @param inputStream The stream of the given CSV.
-     * @return A list with records from the CSV.
+     * @param coinsStream The stream of the given coins CSV.
+     * @param wagesStream The stream of the given wages CSV.
+     * @return A list with records from the coins CSV (including some extra wages from the wages CSV).
      * @throws IOException When I/O problems occur.
      */
-    public List<Record> parse(InputStream inputStream) throws IOException {
-        CSVParser parser = new CSVParser(new InputStreamReader(inputStream, Charset.forName("Cp1252")), CSV_FORMAT);
-        return parser.getRecords().parallelStream().map(csvRecord -> {
+    public List<Record> parse(InputStream coinsStream, InputStream wagesStream) throws IOException {
+        Map<String, Record> recordsById = new ConcurrentHashMap<>();
+        Map<Integer, BigDecimal> wages = getWages(wagesStream);
+
+        CSVParser parser = new CSVParser(new InputStreamReader(coinsStream, Charset.forName("UTF-8")), CSV_FORMAT);
+        List<Record> records = parser.getRecords().parallelStream().map(csvRecord -> {
             Record record = new Record();
 
             record.setId(csvRecord.get("UID"));
             record.setTypeId(csvRecord.get("TYPEID"));
             record.setSource(csvRecord.get("SOURCE"));
             record.setMint(csvRecord.get("MINT"));
-            record.setRegion(csvRecord.get("REGION"));
+            record.setAuthority(csvRecord.get("AUTHORITY"));
 
             record.setDateFrom(getLocalDate(csvRecord.get("DATEfrom")));
             record.setDateTo(getLocalDate(csvRecord.get("DATEto")));
@@ -57,8 +67,61 @@ public class Csv {
             record.setFineWeight(getBigDecimal(csvRecord.get("WEIGHTfine"), 3));
             record.setTaille(getBigDecimal(csvRecord.get("TAILLE"), 3));
 
+            record.setHigherAuthority(csvRecord.get("AUTHORITY_SUPRA"));
+            record.setAlternativeCoinName(csvRecord.get("ALT_CoinNAME"));
+            record.setAlternativeTypeId(csvRecord.get("ALT_TYPEID"));
+
+            // Determine if we should base the quantity coins on the link
+            if ((record.getQuantity() != null) && (record.getQuantity().compareTo(BigDecimal.ZERO) == 0)
+                    && (csvRecord.get("LINK") != null)) {
+                Stream.of(csvRecord.get("LINK").split(","))
+                        .map(id -> recordsById.getOrDefault(id, null))
+                        .filter(linkRecord -> linkRecord != null)
+                        .forEach(linkRecord -> {
+                            BigDecimal totalQuantity = linkRecord.getQuantity();
+                            long totalDays = record.getTotalDays() + linkRecord.getTotalDays();
+
+                            linkRecord.setQuantity(
+                                    totalQuantity
+                                            .multiply(new BigDecimal(linkRecord.getTotalDays()))
+                                            .divide(new BigDecimal(totalDays), BigDecimal.ROUND_HALF_UP)
+                            );
+
+                            record.setQuantity(
+                                    totalQuantity
+                                            .multiply(new BigDecimal(record.getTotalDays()))
+                                            .divide(new BigDecimal(totalDays), BigDecimal.ROUND_HALF_UP)
+                            );
+                        });
+            }
+
+            // Calculate the coin values in hourly wages
+            if (record.getValue() != null) {
+                long totalDays = 0;
+                BigDecimal totalValue = BigDecimal.ZERO;
+                for (Map.Entry<Integer, Long> yearEntry : record.getTotalDaysPerYear().entrySet()) {
+                    if (wages.containsKey(yearEntry.getKey())) {
+                        BigDecimal hourlyWage = wages.get(yearEntry.getKey());
+                        BigDecimal daysInYear = new BigDecimal(yearEntry.getValue());
+
+                        totalDays += yearEntry.getValue();
+                        totalValue = totalValue.add(hourlyWage.multiply(daysInYear));
+                    }
+                }
+
+                if (totalDays > 0) {
+                    BigDecimal averageWage = totalValue.divide(new BigDecimal(totalDays), BigDecimal.ROUND_HALF_UP);
+                    record.setValueInHourlyWages(record.getValue().divide(averageWage, BigDecimal.ROUND_HALF_UP));
+                }
+            }
+
+            // Also map each record by its id
+            recordsById.put(record.getId(), record);
+
             return record;
         }).collect(Collectors.toList());
+
+        return records;
     }
 
     /**
@@ -82,7 +145,7 @@ public class Csv {
                         record.getTypeId(),
                         record.getSource(),
                         record.getMint(),
-                        record.getRegion(),
+                        record.getAuthority(),
                         formatLocalDate(record.getDateTo()),
                         formatLocalDate(record.getDateFrom()),
                         record.getCoinName(),
@@ -92,7 +155,11 @@ public class Csv {
                         record.getPurity(),
                         record.getRawWeight(),
                         record.getFineWeight(),
-                        record.getTaille());
+                        record.getTaille(),
+                        record.getHigherAuthority(),
+                        record.getAlternativeCoinName(),
+                        record.getAlternativeTypeId(),
+                        record.getValueInHourlyWages());
             }
         }
         finally {
@@ -101,6 +168,24 @@ public class Csv {
         }
 
         return writer;
+    }
+
+    /**
+     * Parses the given wages CSV.
+     *
+     * @param inputStream The stream of the given wages CSV.
+     * @return The mapping between the year and the hourly wage.
+     * @throws IOException When I/O problems occur.
+     */
+    private Map<Integer, BigDecimal> getWages(InputStream inputStream) throws IOException {
+        CSVParser parser = new CSVParser(new InputStreamReader(inputStream, Charset.forName("UTF-8")), CSV_FORMAT);
+        return parser.getRecords().stream()
+                .filter(csvRecord -> (csvRecord.get("Year") != null) && csvRecord.get("Year").matches("[0-9]+"))
+                .filter(csvRecord -> (getBigDecimal(csvRecord.get("Hourly wage (VALUEd)"), 2) != null))
+                .collect(Collectors.toMap(
+                        csvRecord -> Integer.parseInt(csvRecord.get("Year")),
+                        csvRecord -> getBigDecimal(csvRecord.get("Hourly wage (VALUEd)"), 2)
+                ));
     }
 
     /**

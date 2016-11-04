@@ -1,15 +1,168 @@
 (function ($, d3, c3) {
     var fields, values, dataTable, chart;
 
-    var variables = ["UID", "TYPEID", "SOURCE", "MINT", "REGION", "DATE", "CoinNAME", "ALLOY", "VALUEd", "QTTYcoins", "FINEness", "WEIGHTraw", "WEIGHTfine", "TAILLE"];
-
-    var dateFields = ["DATE", "DATEfrom", "DATEto"];
-    var textFields = ["UID", "TYPEID", "SOURCE", "MINT", "REGION", "CoinNAME", "ALLOY"];
-    var numberFields = ["VALUEd", "QTTYcoins", "FINEness", "WEIGHTraw", "WEIGHTfine", "TAILLE"];
-
-    var divideByDaysFields = ["QTTYcoins", "WEIGHTraw", "WEIGHTfine"];
-    var divideByQttFields = ["VALUEd", "FINEness", "TAILLE"];
-    var variablesOfInterestFields = ["TYPEID", "MINT", "REGION", "DATEfrom", "DATEto", "CoinNAME", "ALLOY", "VALUEd", "QTTYcoins", "FINEness", "WEIGHTraw", "WEIGHTfine", "TAILLE"];
+    var variables = {
+        UID: {
+            date: false,
+            text: true,
+            number: false,
+            divideByDays: false,
+            divideByQtty: false,
+            variableOfInterest: false
+        },
+        TYPEID: {
+            date: false,
+            text: true,
+            number: false,
+            divideByDays: false,
+            divideByQtty: false,
+            variableOfInterest: true
+        },
+        SOURCE: {
+            date: false,
+            text: true,
+            number: false,
+            divideByDays: false,
+            divideByQtty: false,
+            variableOfInterest: true
+        },
+        MINT: {
+            date: false,
+            text: true,
+            number: false,
+            divideByDays: false,
+            divideByQtty: false,
+            variableOfInterest: true
+        },
+        AUTHORITY: {
+            date: false,
+            text: true,
+            number: false,
+            divideByDays: false,
+            divideByQtty: false,
+            variableOfInterest: true
+        },
+        DATE: {
+            date: true,
+            text: false,
+            number: false,
+            divideByDays: false,
+            divideByQtty: false,
+            variableOfInterest: false
+        },
+        DATEfrom: {
+            date: true,
+            text: false,
+            number: false,
+            divideByDays: false,
+            divideByQtty: false,
+            variableOfInterest: true
+        },
+        DATEto: {
+            date: true,
+            text: false,
+            number: false,
+            divideByDays: false,
+            divideByQtty: false,
+            variableOfInterest: true
+        },
+        CoinNAME: {
+            date: false,
+            text: true,
+            number: false,
+            divideByDays: false,
+            divideByQtty: false,
+            variableOfInterest: true
+        },
+        ALLOY: {
+            date: false,
+            text: true,
+            number: false,
+            divideByDays: false,
+            divideByQtty: false,
+            variableOfInterest: true
+        },
+        VALUEd: {
+            date: false,
+            text: false,
+            number: true,
+            divideByDays: false,
+            divideByQtty: true,
+            variableOfInterest: true
+        },
+        QTTYcoins: {
+            date: false,
+            text: false,
+            number: true,
+            divideByDays: true,
+            divideByQtty: false,
+            variableOfInterest: true
+        },
+        FINEness: {
+            date: false,
+            text: false,
+            number: true,
+            divideByDays: false,
+            divideByQtty: true,
+            variableOfInterest: true
+        },
+        WEIGHTraw: {
+            date: false,
+            text: false,
+            number: true,
+            divideByDays: true,
+            divideByQtty: false,
+            variableOfInterest: true
+        },
+        WEIGHTfine: {
+            date: false,
+            text: false,
+            number: true,
+            divideByDays: true,
+            divideByQtty: false,
+            variableOfInterest: true
+        },
+        TAILLE: {
+            date: false,
+            text: false,
+            number: true,
+            divideByDays: false,
+            divideByQtty: true,
+            variableOfInterest: true
+        },
+        AUTHORITY_SUPRA: {
+            date: false,
+            text: true,
+            number: false,
+            divideByDays: false,
+            divideByQtty: false,
+            variableOfInterest: true
+        },
+        ALT_CoinNAME: {
+            date: false,
+            text: true,
+            number: false,
+            divideByDays: false,
+            divideByQtty: false,
+            variableOfInterest: true
+        },
+        ALT_TYPEID: {
+            date: false,
+            text: true,
+            number: false,
+            divideByDays: false,
+            divideByQtty: false,
+            variableOfInterest: true
+        },
+        VALUE_HourlyWAGE: {
+            date: false,
+            text: false,
+            number: true,
+            divideByDays: false,
+            divideByQtty: true,
+            variableOfInterest: true
+        }
+    };
 
     var tableColumns = $('#tableColumns');
     var xAxis = $('#xAxis');
@@ -44,19 +197,22 @@
         $.getJSON('/fields', function (data) {
             fields = data;
 
-            var select = $('select').not(xAxis).not(yAxis).not(variable);
+            var select = $('select').not(xAxis).not(yAxis).not(variable).not(tableColumns);
             forEachInObject(fields, function (key, label) {
                 var selects = $();
 
-                if (variablesOfInterestFields.indexOf(key) >= 0) {
-                    if (textFields.indexOf(key) >= 0)
+                if (variables[key].variableOfInterest) {
+                    if (variables[key].text)
                         selects = selects.add(xAxis).add(variable);
-                    if (numberFields.indexOf(key) >= 0)
-                        selects = selects.add(yAxis).add(variable);
+                    if (variables[key].number)
+                        selects = selects.add(yAxis);
                 }
 
-                if (dateFields.indexOf(key) < 0)
+                if (!variables[key].date)
                     selects = selects.add(select);
+
+                if (key !== 'DATE')
+                    selects = selects.add(tableColumns);
 
                 selects.append($("<option></option>").attr('value', key).text(label));
             });
@@ -64,8 +220,8 @@
             select.val('');
             xAxis.val('year');
             yAxis.val('total');
-            variable.val('total');
-            tableColumns.val(['CoinNAME', 'MINT', 'REGION', 'ALLOY']);
+            variable.val('');
+            tableColumns.val(['CoinNAME', 'MINT', 'AUTHORITY', 'ALLOY']);
 
             callback();
         });
@@ -91,7 +247,7 @@
         var textBlock = criteriaBlock.find('.text-criteria');
         var numberBlock = criteriaBlock.find('.number-criteria');
 
-        if (textFields.indexOf(val) >= 0) {
+        if (variables[val].text) {
             numberBlock.hide();
             textBlock.show();
 
@@ -101,7 +257,7 @@
             }
         }
 
-        if (numberFields.indexOf(val) >= 0) {
+        if (variables[val].number) {
             textBlock.hide();
             numberBlock.show();
         }
@@ -182,11 +338,19 @@
 
         var columns = [];
         tableColumns.val().forEach(function (field) {
-            columns.push({
+            var columnData = {
                 data: field,
                 title: fields[field],
                 defaultContent: '<i>Unknown</i>'
-            });
+            };
+
+            if (variables[field].date) {
+                columnData.render = function (date) {
+                    return date.day + '-' + date.month + '-' + date.year;
+                };
+            }
+
+            columns.push(columnData);
         });
 
         if (dataTable) {
@@ -216,7 +380,7 @@
     function refreshStatistics(data) {
         var missingTotals = {};
         data.forEach(function (row) {
-            variables.forEach(function (variable) {
+            forEachInObject(variables, function (variable) {
                 var val = (variable === 'DATE') ? row.DATEfrom : row[variable];
                 var count = (val !== undefined) ? 0 : 1;
                 addToObject(missingTotals, variable, count, function (value) {
@@ -228,7 +392,7 @@
         var html = '<h3>Missing data</h3>';
 
         var count = 0;
-        variables.forEach(function (variable) {
+        forEachInObject(variables, function (variable) {
             if (missingTotals[variable] > 0) {
                 if (count % 2 === 0) {
                     html += '<div class="row">';
@@ -304,14 +468,31 @@
             },
             axis: {
                 x: {
-                    label: (x === 'year') ? 'Year' : fields[x],
+                    label: {
+                        text: (x === 'year') ? 'Year' : fields[x],
+                        position: 'outer-center'
+                    },
                     type: (x === 'year') ? 'indexed' : 'category',
                     tick: {
-                        values: (x === 'year') ? tickValues : null
+                        values: (x === 'year') ? tickValues : null,
+                        rotate: (x !== 'year') ? 90 : null,
+                        multiline: false
                     }
                 },
                 y: {
-                    label: (y === 'total') ? 'Number of records' : fields[y]
+                    min: 0,
+                    label: {
+                        text: (function () {
+                            if (y === 'total')
+                                return 'Number of records';
+
+                            if (variables[y].divideByQtty)
+                                return 'Average ' + fields[y].toLowerCase();
+
+                            return fields[y];
+                        })(),
+                        position: 'outer-center'
+                    }
                 }
             },
             zoom: {
@@ -323,18 +504,23 @@
     function detailedDataHtml(row) {
         var html = '';
 
-        for (var i = 0; i < variables.length; i++) {
-            if (i % 2 === 0) {
-                html += '<div class="row">';
-            }
+        var i = 0;
+        forEachInObject(variables, function (variable) {
+            if (!variables[variable].date || (variable == 'DATE')) {
+                if (i % 2 === 0) {
+                    html += '<div class="row">';
+                }
 
-            html += '<div class="col-md-3"><strong>' + fields[variables[i]] + ':' + '</strong></div>';
-            html += '<div class="col-md-3">' + getValue(row, variables[i]) + '</div>';
+                html += '<div class="col-md-3"><strong>' + fields[variable] + ':' + '</strong></div>';
+                html += '<div class="col-md-3">' + getValue(row, variable) + '</div>';
 
-            if (i % 2 === 1) {
-                html += '</div>';
+                if (i % 2 === 1) {
+                    html += '</div>';
+                }
+
+                i++;
             }
-        }
+        });
 
         return html;
     }
@@ -361,7 +547,7 @@
                 var category = null;
                 if (valueVariable === 'total')
                     category = 'Number of records';
-                else if (yVariable === valueVariable)
+                else if (valueVariable === '')
                     category = yVariable;
                 else if (row[valueVariable])
                     category = row[valueVariable];
@@ -392,7 +578,7 @@
                 var qttyCoins = (row.QTTYcoins !== undefined) ? row.QTTYcoins : totalDays;
                 if (xVariable === 'year') {
                     qttyCoins = (qttyCoins / row.totalDays) * totalDays;
-                    if (divideByDaysFields.indexOf(yVariable) >= 0)
+                    if ((yVariable in variables) && variables[yVariable].divideByDays)
                         totals = (totals / row.totalDays) * totalDays;
                 }
 
@@ -405,12 +591,12 @@
         }
 
         var chartData = {};
-        forEachInObject(chartDataWithTotals, function (x, variables) {
+        forEachInObject(chartDataWithTotals, function (x, variablesTotals) {
             addToObject(chartData, x, {});
-            forEachInObject(variables, function (variable, totals) {
+            forEachInObject(variablesTotals, function (variable, totals) {
                 var total = 0, totalQtty = 0;
                 totals.forEach(function (totalObj) {
-                    if (divideByQttFields.indexOf(yVariable) >= 0) {
+                    if ((yVariable in variables) && variables[yVariable].divideByQtty) {
                         total += totalObj.total * totalObj.qtty;
                         totalQtty += totalObj.qtty;
                     }
@@ -419,7 +605,7 @@
                     }
                 });
 
-                chartData[x][variable] = (divideByQttFields.indexOf(yVariable) >= 0) ? (total / totalQtty) : total;
+                chartData[x][variable] = ((yVariable in variables) && variables[yVariable].divideByQtty) ? (total / totalQtty) : total;
                 if (variable === 'QTTYcoins')
                     chartData[x][variable] = Math.round(chartData[x][variable]);
                 else

@@ -1,6 +1,7 @@
 package org.iish.coins.record;
 
 import org.iish.coins.config.Config;
+import org.iish.coins.dataset.Datasets;
 import org.iish.coins.util.Getter;
 import spark.Request;
 
@@ -19,7 +20,7 @@ import java.util.stream.Stream;
 @Singleton
 public class RecordsFilter {
     private @Inject Config config;
-    private @Inject List<Record> records;
+    private @Inject Datasets datasets;
 
     /**
      * For the given request, filter the list of records.
@@ -28,7 +29,7 @@ public class RecordsFilter {
      * @return The filtered records.
      */
     public List<Record> getRecords(Request request) {
-        Stream<Record> recordStream = records.parallelStream();
+        Stream<Record> recordStream = datasets.getCsv().parallelStream();
 
         String years = request.queryParams("years");
         LocalDate from = getDate(request.queryParams("from"), true);

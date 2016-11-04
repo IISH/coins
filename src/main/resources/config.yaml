@@ -4,16 +4,24 @@ dataverse:
   connectTimeoutMs: 5000
   readTimeoutMs: 10000
 
+# The datasets PIDs and keys
+datasets:
+  coins:
+    pid: "10622/D5WXZZ"
+  wages:
+    pid: "10622/..."
+    key: "12345"
+
 # Fields of the CSV
 fields:
   UID: "Record identifier"
   TYPEID: "Coin type identifier"
   SOURCE: "Source of record"
   MINT: "Location of mint house"
-  REGION: "Authority coin issuer"
+  AUTHORITY: "Authority coin issuer"
   DATE: "Minting period"
-  DATEfrom: "Minting period"
-  DATEto: "Minting period"
+  DATEfrom: "Minting start date"
+  DATEto: "Minting end date"
   CoinNAME: "Name of coin"
   ALLOY: "Type of metal"
   VALUEd: "Value in deniers"
@@ -22,3 +30,7 @@ fields:
   WEIGHTraw: "Troy mark weight (all materials)"
   WEIGHTfine: "Troy mark weight (fine metal)"
   TAILLE: "No. of coins in a Troy mark"
+  AUTHORITY_SUPRA: "Higher authority coin issuer"
+  ALT_CoinNAME: "Name of coin (alternative)"
+  ALT_TYPEID: "Coin type identifier (alternative)"
+  VALUE_HourlyWAGE: "Value in hourly wages"

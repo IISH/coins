@@ -16,7 +16,7 @@ public class Record {
     private @SerializedName("TYPEID") String typeId;
     private @SerializedName("SOURCE") String source;
     private @SerializedName("MINT") String mint;
-    private @SerializedName("REGION") String region;
+    private @SerializedName("AUTHORITY") String authority;
     private @SerializedName("DATEfrom") LocalDate dateFrom;
     private @SerializedName("DATEto") LocalDate dateTo;
     private @SerializedName("CoinNAME") String coinName;
@@ -27,6 +27,10 @@ public class Record {
     private @SerializedName("WEIGHTraw") BigDecimal rawWeight;
     private @SerializedName("WEIGHTfine") BigDecimal fineWeight;
     private @SerializedName("TAILLE") BigDecimal taille;
+    private @SerializedName("AUTHORITY_SUPRA") String higherAuthority;
+    private @SerializedName("ALT_CoinNAME") String alternativeCoinName;
+    private @SerializedName("ALT_TYPEID") String alternativeTypeId;
+    private @SerializedName("VALUE_HourlyWAGE") BigDecimal valueInHourlyWages;
 
     private long totalDays;
     private Map<Integer, Long> totalDaysPerYear;
@@ -63,12 +67,12 @@ public class Record {
         this.mint = mint;
     }
 
-    public String getRegion() {
-        return region;
+    public String getAuthority() {
+        return authority;
     }
 
-    public void setRegion(String region) {
-        this.region = region;
+    public void setAuthority(String authority) {
+        this.authority = authority;
     }
 
     public LocalDate getDateFrom() {
@@ -157,6 +161,38 @@ public class Record {
 
     public void setTaille(BigDecimal taille) {
         this.taille = taille;
+    }
+
+    public String getHigherAuthority() {
+        return higherAuthority;
+    }
+
+    public void setHigherAuthority(String higherAuthority) {
+        this.higherAuthority = higherAuthority;
+    }
+
+    public String getAlternativeCoinName() {
+        return alternativeCoinName;
+    }
+
+    public void setAlternativeCoinName(String alternativeCoinName) {
+        this.alternativeCoinName = alternativeCoinName;
+    }
+
+    public String getAlternativeTypeId() {
+        return alternativeTypeId;
+    }
+
+    public void setAlternativeTypeId(String alternativeTypeId) {
+        this.alternativeTypeId = alternativeTypeId;
+    }
+
+    public BigDecimal getValueInHourlyWages() {
+        return valueInHourlyWages;
+    }
+
+    public void setValueInHourlyWages(BigDecimal valueInHourlyWages) {
+        this.valueInHourlyWages = valueInHourlyWages;
     }
 
     public long getTotalDays() {
