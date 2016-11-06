@@ -40,19 +40,21 @@ public class RecordsFilter {
 
         Getter<Record> recordGetter = new Getter<>(Record.class);
         for (String param : request.queryParams()) {
-            if (recordGetter.hasName(param)) {
+            String name = param.endsWith("[]") ? param.substring(0, param.length() - 2) : param;
+
+            if (recordGetter.hasName(name)) {
                 String[] values = request.queryParamsValues(param);
 
-                if (recordGetter.getType(param) == String.class) {
+                if (recordGetter.getType(name) == String.class) {
                     recordStream = recordStream.filter(record -> {
-                        String value = (String) recordGetter.getValue(param, record);
+                        String value = (String) recordGetter.getValue(name, record);
                         return filterOnString(value, values);
                     });
                 }
 
-                if (recordGetter.getType(param) == BigDecimal.class) {
+                if (recordGetter.getType(name) == BigDecimal.class) {
                     recordStream = recordStream.filter(record -> {
-                        BigDecimal value = (BigDecimal) recordGetter.getValue(param, record);
+                        BigDecimal value = (BigDecimal) recordGetter.getValue(name, record);
                         return filterOnBigDecimal(value, values);
                     });
                 }

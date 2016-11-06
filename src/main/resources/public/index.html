@@ -24,7 +24,7 @@
                 <div class="col-md-8">
                     <div class="form-group form-group-sm form-group-repeat criteria-block">
                         <div class="col-md-4">
-                            <select class="form-control" name="criteria-column">
+                            <select class="form-control" name="criteria-column-1">
                             </select>
                         </div>
 
@@ -32,29 +32,29 @@
                             <div class="col-md-3 text-center">
                                 <div class="btn-group btn-group-xs" data-toggle="buttons">
                                     <label class="btn btn-default active">
-                                        <input type="radio" autocomplete="off" name="negative-text" value="eq" checked>
+                                        <input type="radio" autocomplete="off" name="negative-text-1" value="eq" checked>
                                         is
                                     </label>
                                     <label class="btn btn-default">
-                                        <input type="radio" autocomplete="off" name="negative-text" value="ne">
+                                        <input type="radio" autocomplete="off" name="negative-text-1" value="ne">
                                         not
                                     </label>
                                 </div>
 
                                 <div class="btn-group btn-group-xs" data-toggle="buttons">
                                     <label class="btn btn-default active">
-                                        <input type="radio" autocomplete="off" name="contains" value="exact" checked>
+                                        <input type="radio" autocomplete="off" name="contains-1" value="exact" checked>
                                         exact
                                     </label>
                                     <label class="btn btn-default">
-                                        <input type="radio" autocomplete="off" name="contains" value="ctns">
+                                        <input type="radio" autocomplete="off" name="contains-1" value="ctns">
                                         contains
                                     </label>
                                 </div>
                             </div>
 
                             <div class="col-md-4">
-                                <input type="text" class="form-control" name="criteria-value"/>
+                                <input type="text" class="form-control" name="criteria-value-1"/>
                             </div>
                         </div>
 
@@ -62,22 +62,22 @@
                             <div class="col-md-3 text-center">
                                 <div class="btn-group btn-group-xs" data-toggle="buttons">
                                     <label class="btn btn-default active">
-                                        <input type="radio" autocomplete="off" name="negative-number" value="eq" checked>
+                                        <input type="radio" autocomplete="off" name="negative-number-1" value="eq" checked>
                                         is between
                                     </label>
                                     <label class="btn btn-default">
-                                        <input type="radio" autocomplete="off" name="negative-number" value="ne">
+                                        <input type="radio" autocomplete="off" name="negative-number-1" value="ne">
                                         not between
                                     </label>
                                 </div>
                             </div>
 
                             <div class="col-md-2">
-                                <input type="text" class="form-control" name="criteria-min"/>
+                                <input type="text" class="form-control" name="criteria-min-1"/>
                             </div>
 
                             <div class="col-md-2">
-                                <input type="text" class="form-control" name="criteria-max"/>
+                                <input type="text" class="form-control" name="criteria-max-1"/>
                             </div>
                         </div>
 
@@ -230,11 +230,17 @@
 
     <div class="tab-content">
         <div role="tabpanel" class="tab-pane active" id="table">
-            <table class="table table-striped table-hover" style="width:100%;">
-            </table>
+            <div class="loading"></div>
+            <div class="content" style="display:none;"></div>
         </div>
-        <div role="tabpanel" class="tab-pane" id="stats"></div>
-        <div role="tabpanel" class="tab-pane" id="chart"></div>
+        <div role="tabpanel" class="tab-pane" id="stats">
+            <div class="loading"></div>
+            <div class="content" style="display:none;"></div>
+        </div>
+        <div role="tabpanel" class="tab-pane" id="chart">
+            <div class="loading"></div>
+            <div class="content" style="display:none;"></div>
+        </div>
     </div>
 </div>
 
@@ -246,6 +252,10 @@
 <script src="js/c3.min.js"></script>
 <script src="js/jquery.dataTables.min.js"></script>
 <script src="js/dataTables.bootstrap.min.js"></script>
-<script src="js/script.js"></script>
+
+<script src="js/data.js"></script>
+<script src="js/table.js"></script>
+<script src="js/chart.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>
