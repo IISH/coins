@@ -32,7 +32,8 @@
                             <div class="col-md-3 text-center">
                                 <div class="btn-group btn-group-xs" data-toggle="buttons">
                                     <label class="btn btn-default active">
-                                        <input type="radio" autocomplete="off" name="negative-text-1" value="eq" checked>
+                                        <input type="radio" autocomplete="off" name="negative-text-1" value="eq"
+                                               checked>
                                         is
                                     </label>
                                     <label class="btn btn-default">
@@ -62,7 +63,8 @@
                             <div class="col-md-3 text-center">
                                 <div class="btn-group btn-group-xs" data-toggle="buttons">
                                     <label class="btn btn-default active">
-                                        <input type="radio" autocomplete="off" name="negative-number-1" value="eq" checked>
+                                        <input type="radio" autocomplete="off" name="negative-number-1" value="eq"
+                                               checked>
                                         is between
                                     </label>
                                     <label class="btn btn-default">
@@ -131,7 +133,8 @@
                                         </div>
 
                                         <div class="col-sm-12">
-                                            <select class="form-control" name="table-columns" id="tableColumns" multiple>
+                                            <select class="form-control" name="table-columns" id="tableColumns"
+                                                    multiple>
                                             </select>
                                         </div>
                                     </div>
@@ -182,13 +185,14 @@
                                     </div>
 
                                     <div class="form-group form-group-sm text-center">
-                                       <div class="btn-group btn-group-sm" data-toggle="buttons">
+                                        <div class="btn-group btn-group-sm" data-toggle="buttons">
                                             <label class="btn btn-default">
                                                 <input type="radio" autocomplete="off" name="type" value="bar">
                                                 Bar chart
                                             </label>
                                             <label class="btn btn-default active">
-                                                <input type="radio" autocomplete="off" name="type" value="spline" checked>
+                                                <input type="radio" autocomplete="off" name="type" value="line"
+                                                       checked>
                                                 Line chart
                                             </label>
                                             <label class="btn btn-default">
@@ -221,10 +225,10 @@
             <a href="#table" data-toggle="tab" id="table-tab">Table</a>
         </li>
         <li role="presentation">
-            <a href="#stats" data-toggle="tab" id="stats-tab">Statistics</a>
+            <a href="#chart" data-toggle="tab" id="chart-tab">Chart</a>
         </li>
         <li role="presentation">
-            <a href="#chart" data-toggle="tab" id="chart-tab">Chart</a>
+            <a href="#map" data-toggle="tab" id="map-tab">Map</a>
         </li>
     </ul>
 
@@ -233,11 +237,11 @@
             <div class="loading"></div>
             <div class="content" style="display:none;"></div>
         </div>
-        <div role="tabpanel" class="tab-pane" id="stats">
+        <div role="tabpanel" class="tab-pane" id="chart">
             <div class="loading"></div>
             <div class="content" style="display:none;"></div>
         </div>
-        <div role="tabpanel" class="tab-pane" id="chart">
+        <div role="tabpanel" class="tab-pane" id="map">
             <div class="loading"></div>
             <div class="content" style="display:none;"></div>
         </div>
@@ -252,10 +256,13 @@
 <script src="js/c3.min.js"></script>
 <script src="js/jquery.dataTables.min.js"></script>
 <script src="js/dataTables.bootstrap.min.js"></script>
+<script src="js/moment.min.js"></script>
+<script src="js/moment-range.min.js"></script>
 
 <script src="js/data.js"></script>
 <script src="js/table.js"></script>
 <script src="js/chart.js"></script>
+<script src="js/map.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

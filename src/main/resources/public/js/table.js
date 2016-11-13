@@ -1,8 +1,14 @@
-/*global jQuery*/
-var Table = (function ($) {
+/*global jQuery, moment*/
+var Table = (function ($, moment) {
     'use strict';
 
     var that;
+
+    $.fn.dataTable.ext.type.order['custom-date-pre'] = function (d) {
+        if ((d !== null) && (d.length > 0))
+            return parseInt(moment(d, 'DD-MM-YYYY').format('x'));
+        return Number.NEGATIVE_INFINITY;
+    };
 
     return function (elem, variables, fields) {
         that = this;
@@ -31,6 +37,7 @@ var Table = (function ($) {
                 };
 
                 if (that.variables[field].date) {
+                    columnData.type = 'custom-date';
                     columnData.render = function (date) {
                         return date.day + '-' + date.month + '-' + date.year;
                     };
@@ -104,4 +111,4 @@ var Table = (function ($) {
             return '<i>Unknown</i>';
         }
     };
-})(jQuery);
+})(jQuery, moment);

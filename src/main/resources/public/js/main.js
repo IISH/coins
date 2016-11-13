@@ -1,21 +1,22 @@
-/*global jQuery, Data, Table, Chart*/
-(function ($, Data, Table, Chart) {
+/*global jQuery, Data, Table, Chart, Map*/
+(function ($, Data, Table, Chart, Map) {
     'use strict';
 
-    var tableTab = $('#table'), statsTab = $('#stats'), chartTab = $('#chart');
+    var tableTab = $('#table'), chartTab = $('#chart'), mapTab = $('#map');
     var data = new Data('#download', '#run', '#tableColumns', '#xAxis', '#yAxis', '#variable');
-    var table, chart = null;
+    var table, chart, map = null;
     var loading = true;
 
     data.onInitialize(function () {
         table = new Table('#table .content', data.variables, data.fields);
         chart = new Chart('#chart .content', data.variables, data.fields);
+        map = new Map('#map .content', data.variables, data.fields);
     });
 
     data.onRefresh(function () {
         loading = true;
         $('.tab-content .tab-pane').each(function (i, tabPane) {
-            $(tabPane).find('.content').empty().hide();
+            $(tabPane).find('.content').hide();
             $(tabPane).find('.loading').show();
         });
     });
@@ -25,83 +26,55 @@
 
         table.update(data.records, data.tableColumns.val());
         chart.update(data.records, data.xAxis.val(), data.yAxis.val(), data.variable.val());
+        map.update(data.records, data.values);
 
         if (tableTab.is(':visible'))
             renderTable();
 
-        if (statsTab.is(':visible'))
-            renderStatistics();
-
         if (chartTab.is(':visible'))
             renderChart();
+
+        if (mapTab.is(':visible'))
+            renderMap();
     });
 
     $('#table-tab').on('shown.bs.tab', function () {
-        if (!loading && tableTab.find('.loading').is(':visible'))
-            renderTable();
-    });
-
-    $('#stats-tab').on('shown.bs.tab', function () {
-        if (!loading && statsTab.find('.loading').is(':visible'))
-            renderStatistics();
+        setTimeout(function () {
+            if (!loading && tableTab.find('.loading').is(':visible'))
+                renderTable();
+        }, 5);
     });
 
     $('#chart-tab').on('shown.bs.tab', function () {
-        if (!loading && chartTab.find('.loading').is(':visible'))
-            renderChart();
+        setTimeout(function () {
+            if (!loading && chartTab.find('.loading').is(':visible'))
+                renderChart();
+        }, 5);
+    });
+
+    $('#map-tab').on('shown.bs.tab', function () {
+        setTimeout(function () {
+            if (!loading && mapTab.find('.loading').is(':visible'))
+                renderMap();
+        }, 5);
     });
 
     function renderTable() {
-        tableTab.find('.loading').hide();
         table.render();
+        tableTab.find('.loading').hide();
         tableTab.find('.content').show();
     }
 
     function renderChart() {
-        chartTab.find('.loading').hide();
         chart.render();
+        chartTab.find('.loading').hide();
         chartTab.find('.content').show();
     }
 
-    function renderStatistics() {
-        statsTab.find('.loading').hide();
-
-        var missingTotals = {};
-        data.records.forEach(function (row) {
-            $.forEachInObject(data.variables, function (variable) {
-                var val = (variable === 'DATE') ? row.DATEfrom : row[variable];
-                var count = (val !== undefined) ? 0 : 1;
-                $.addToObject(missingTotals, variable, count, function (value) {
-                    return value + count;
-                });
-            });
-        });
-
-        var html = '<h3>Missing data</h3>';
-
-        var count = 0;
-        $.forEachInObject(data.variables, function (variable) {
-            if (missingTotals[variable] > 0) {
-                if (count % 2 === 0) {
-                    html += '<div class="row">';
-                }
-
-                html += '<div class="col-md-3"><strong>' + data.fields[variable] + ':' + '</strong></div>';
-                html += '<div class="col-md-3">' + missingTotals[variable] + ' records</div>';
-
-                if (count % 2 === 1) {
-                    html += '</div>';
-                }
-
-                count++;
-            }
-        });
-
-        if (count % 2 === 0) {
-            html += '</div>';
-        }
-
-        statsTab.find('.content').html(html).show();
+    function renderMap() {
+        map.render();
+        mapTab.find('.loading').hide();
+        mapTab.find('.content').show();
     }
 
     $.forEachInObject = function (obj, callback) {
@@ -123,4 +96,4 @@
             obj[key] = ifExists;
         }
     };
-})(jQuery, Data, Table, Chart);
+})(jQuery, Data, Table, Chart, Map);
