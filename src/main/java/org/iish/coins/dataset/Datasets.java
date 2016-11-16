@@ -48,9 +48,8 @@ public class Datasets {
     public List<Record> getCsv() {
         if ((dateCachedCsv == null) || dateCachedCsv.isBefore(LocalDate.now().minusDays(1))) {
             try {
-                String pid = config.datasets.coins.pid;
-                DataverseFile file = dataverseApiClient.getFilesForPid(pid, "text/csv").stream().findFirst().get();
-                InputStream coinsStream = dataverseApiClient.getFileById(file.getId());
+                InputStream coinsStream = dataverseApiClient.getFileById(config.datasets.coins);
+                //InputStream wagesStream = dataverseApiClient.getFileById(config.datasets.wages);
 
                 cachedCsv = new Csv().parse(coinsStream, new FileInputStream(System.getProperty("coins.wages")));
                 dateCachedCsv = LocalDate.now();

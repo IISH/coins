@@ -17,12 +17,7 @@ public class Config {
     }
 
     public static class Datasets {
-        public Dataset coins;
-        public Dataset wages;
-    }
-
-    public static class Dataset {
-        public String pid;
-        public String key;
+        public int coins;
+        public int wages;
     }
 }

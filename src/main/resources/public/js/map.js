@@ -22,7 +22,8 @@ var Map = (function ($, d3, moment) {
 
         var svg = d3.select(elem).append('svg')
             .attr('width', width)
-            .attr('height', height);
+            .attr('height', height)
+            .attr('cursor', 'pointer');
 
         var projection = d3.geo.mercator()
             .scale(8000)
@@ -30,23 +31,25 @@ var Map = (function ($, d3, moment) {
             .rotate([-4.8, 0])
             .translate([(width / 2) + 200, height / 2]);
 
-        var path = d3.geo.path()
-            .projection(projection)
-            .pointRadius(2);
+        var path = d3.geo.path().projection(projection);
 
+        var emptyColor = 'lightgrey';
+        var pieColor = '#6B486B';
         var color = d3.scale.linear()
             .domain([0, 100])
-            .range(['#dd3030', '#fff951']);
+            .range(['#fff951', '#dd3030']);
+
+        var sliderWidth = 200;
+        var yearRange = d3.scale.linear()
+            .domain([1334, 1830])
+            .range([0, sliderWidth])
+            .clamp(true);
 
         var pie = d3.layout.pie();
 
         var pieArc = d3.svg.arc()
             .outerRadius(5)
             .innerRadius(0);
-
-        var mintArc = d3.svg.arc()
-            .outerRadius(10)
-            .innerRadius(10);
 
         var infoArcRadius = 15;
 
@@ -67,8 +70,18 @@ var Map = (function ($, d3, moment) {
                 .on('zoom', zoomed)
         );
 
+        var lastYearVal = yearRange.domain()[0];
+        var drag = d3.behavior.drag()
+            .on('dragstart', function () {
+                d3.event.sourceEvent.stopPropagation();
+            })
+            .on('dragend', function () {
+                onYear(lastYearVal);
+            });
+
         var map = createMap();
         var legend = createLegend();
+        var slider = createSlider();
         var info = createInfo();
 
         this.update = function (data, values) {
@@ -105,23 +118,19 @@ var Map = (function ($, d3, moment) {
                 getMints(function (mints) {
                     that.mintsFeatures = mints;
 
-                    var mint = map.selectAll('.mint')
+                    map.selectAll('.mint')
                         .data(that.mintsFeatures)
                         .enter()
                         .append('g')
-                        .attr('fill', 'black')
                         .attr('class', 'mint')
                         .attr('data-mint', function (d) {
                             return d.properties.ID;
-                        });
-
-                    mint.append('path').attr('d', path);
-
-                    mint.append('g')
-                        .attr('class', 'pies')
+                        })
                         .attr('transform', function (d) {
                             return 'translate(' + projection(d.geometry.coordinates)[0] + ' ' + projection(d.geometry.coordinates)[1] + ')';
-                        });
+                        })
+                        .on('mouseover', onHoverMint)
+                        .on('mouseout', hideInfo);
 
                     that.render();
                 });
@@ -156,32 +165,144 @@ var Map = (function ($, d3, moment) {
                 .attr('class', 'legend')
                 .attr('transform', 'translate(10,10)');
 
+            legend.append('text')
+                .text('Percentage data available')
+                .attr('x', -150)
+                .attr('text-anchor', 'middle')
+                .attr('transform', 'rotate(270)')
+                .style('font-size', '10px');
+
+            legend.append('rect')
+                .attr('width', 20)
+                .attr('height', 20)
+                .attr('fill', emptyColor)
+                .attr('transform', 'translate(10,5)');
+
             legend.append('rect')
                 .attr('width', 20)
                 .attr('height', 200)
                 .attr('fill', 'url(#gradient)')
-                .attr('transform', 'translate(10,10)');
+                .attr('transform', 'translate(10,55)');
 
             legend.append('text')
-                .attr('x', 10)
-                .attr('y', 0)
                 .text('0%')
-                .style('font-size', '12px');
+                .attr('x', 20)
+                .attr('text-anchor', 'middle')
+                .style('font-size', '10px');
 
             legend.append('text')
-                .attr('x', 5)
-                .attr('y', 230)
+                .text('> 0%')
+                .attr('x', 20)
+                .attr('y', 50)
+                .attr('text-anchor', 'middle')
+                .style('font-size', '10px');
+
+            legend.append('text')
                 .text('100%')
-                .style('font-size', '12px');
+                .attr('x', 20)
+                .attr('y', 270)
+                .attr('text-anchor', 'middle')
+                .style('font-size', '10px');
 
             return legend;
+        }
+
+        function createSlider() {
+            var slider = svg.append('g')
+                .style('pointer-events', 'none')
+                .attr('class', 'slider')
+                .attr('transform', 'translate(70,10)');
+
+            slider.append('line')
+                .attr('class', 'track')
+                .attr('x1', yearRange.range()[0])
+                .attr('x2', yearRange.range()[1])
+                .attr('transform', 'translate(0,15)')
+                .style({
+                    'stroke-linecap': 'round',
+                    'stroke': '#000',
+                    'stroke-opacity': '0.3',
+                    'stroke-width': '10px'
+                });
+
+            slider.append('line')
+                .attr('class', 'track-inset')
+                .attr('x1', yearRange.range()[0])
+                .attr('x2', yearRange.range()[1])
+                .attr('transform', 'translate(0,15)')
+                .style({
+                    'stroke-linecap': 'round',
+                    'stroke': '#ddd',
+                    'stroke-width': '8px'
+                });
+
+            slider.append('line')
+                .attr('class', 'track-overlay')
+                .attr('x1', yearRange.range()[0])
+                .attr('x2', yearRange.range()[1])
+                .attr('transform', 'translate(0,15)')
+                .style({
+                    'stroke-linecap': 'round',
+                    'pointer-events': 'stroke',
+                    'stroke-width': '50px',
+                    'cursor': 'crosshair'
+                })
+                .call(drag);
+
+            slider.insert('g', '.track-overlay')
+                .attr('class', 'ticks')
+                .attr('transform', 'translate(0,33)')
+                .selectAll('text')
+                .data(yearRange.ticks(5))
+                .enter()
+                .append('text')
+                .attr('x', yearRange)
+                .attr('text-anchor', 'middle')
+                .style('font-size', '10px')
+                .text(function (d) {
+                    return d;
+                });
+
+            var handle = slider.insert('g', '.track-overlay').attr('class', 'handle');
+
+            var handleYear = handle.insert('text')
+                .attr('class', 'handle-year')
+                .attr('text-anchor', 'middle')
+                .style('font-size', '10px')
+                .text(yearRange.domain()[0]);
+
+            handle.insert('circle')
+                .attr('class', 'handle-circle')
+                .attr('r', 9)
+                .attr('transform', 'translate(0,15)')
+                .style({
+                    'fill': '#fff',
+                    'stroke': '#000',
+                    'stroke-opacity': '0.5',
+                    'stroke-width': '1.25px'
+                });
+
+            slider.append('text')
+                .text('Show/hide authorities by year')
+                .attr('x', 100)
+                .attr('text-anchor', 'middle')
+                .attr('transform', 'translate(0,50)')
+                .style('font-size', '10px');
+
+            drag.on('drag', function () {
+                lastYearVal = Math.round(yearRange.invert(d3.event.x));
+                handleYear.text(lastYearVal);
+                handle.attr('transform', 'translate(' + yearRange(yearRange.invert(d3.event.x)) + ',0)');
+            });
+
+            return slider;
         }
 
         function createInfo() {
             return svg.append('g')
                 .style('pointer-events', 'none')
                 .attr('class', 'info')
-                .attr('transform', 'translate(150,10)');
+                .attr('transform', 'translate(70,80)');
         }
 
         function getAuthorities(callback) {
@@ -261,10 +382,11 @@ var Map = (function ($, d3, moment) {
             map.selectAll('.authority')
                 .data(that.authoritiesFeatures)
                 .attr('fill', function (d) {
+                    var fillColor = emptyColor;
                     var percentages = getPercentagesForAuthority(d.properties.AUTHORITY);
-                    if (percentages.parts.length > 0)
-                        return color(percentages.percentage);
-                    return 'lightgrey';
+                    if ((percentages.parts.length > 0) && (percentages.percentage > 0))
+                        fillColor = color(percentages.percentage);
+                    return fillColor;
                 });
         }
 
@@ -272,78 +394,42 @@ var Map = (function ($, d3, moment) {
             map.selectAll('.mint')
                 .data(that.mintsFeatures)
                 .each(function (mint) {
-                    var percentages = getPercentagesForMint(mint.properties.MINT);
-                    var pieMint = pie(Array.from({length: percentages.parts.length}, function () {
-                        return 100 / percentages.parts.length;
-                    }));
+                    var p = getPercentagesForMint(mint.properties.MINT);
 
-                    var pies = d3.select(this).select('.pies');
+                    var arcs = d3.select(this)
+                        .selectAll('.arc')
+                        .data(pie([100 - p.percentage, p.percentage]));
 
-                    pies.selectAll('.pie').remove();
-                    pies.selectAll('.pie')
-                        .data(percentages.parts)
-                        .enter()
-                        .append('g')
-                        .attr('class', 'pie')
-                        .attr('stroke', 'grey')
-                        .attr('transform', function (d, i) {
-                            if (percentages.parts.length > 1)
-                                return 'translate(' + mintArc.centroid(pieMint[i]) + ')';
-                            return '';
+                    arcs.enter()
+                        .append('path')
+                        .attr('class', 'arc')
+                        .attr('stroke', function (d) {
+                            if (d.startAngle === d.endAngle)
+                                return 'none';
+                            return pieColor;
                         })
-                        .on('mouseover', function (d) {
-                            onHoverMint(mint, d.AUTHORITY);
-                        })
-                        .on('mouseout', hideInfo)
-                        .each(function (d) {
-                            d3.select(this).selectAll('.arc')
-                                .data(pie([100 - d.percentage, d.percentage]))
-                                .enter()
-                                .append('path')
-                                .attr('d', pieArc)
-                                .style('fill', function (d, i) {
-                                    return (i === 0) ? 'white' : '#337ab7';
-                                });
+                        .attr('fill', function (d, i) {
+                            return (i === 0) ? 'white' : pieColor;
                         });
+
+                    arcs.attr('d', pieArc);
                 });
         }
 
         function onHoverAuthority(d) {
-            if (isZooming)
-                return;
-
-            var percentages = getPercentagesForAuthority(d.properties.AUTHORITY);
-            var height = 0;
-
-            setInfo(0, height, percentages.percentage, d.properties.AUTHORITY, true);
-            percentages.parts.forEach(function (part, i) {
-                var width = 250;
-                if (i % 2 === 0) {
-                    width = 0;
-                    height += (infoArcRadius * 2) + 10;
-                }
-
-                setInfo(width, height, part.percentage, part.MINT, false);
-            });
+            setInfoBlock(
+                getPercentagesForAuthority(d.properties.AUTHORITY),
+                d.properties.AUTHORITY,
+                'MINT'
+            );
         }
 
-        function onHoverMint(d, authority) {
-            if (isZooming)
-                return;
-
-            var percentages = getPercentagesForMint(d.properties.MINT);
-            var height = 0;
-
-            setInfo(0, height, percentages.percentage, d.properties.MINT, true);
-            percentages.parts.forEach(function (part, i) {
-                var width = 250;
-                if (i % 2 === 0) {
-                    width = 0;
-                    height += (infoArcRadius * 2) + 10;
-                }
-
-                setInfo(width, height, part.percentage, part.AUTHORITY, part.AUTHORITY === authority);
-            });
+        function onHoverMint(d) {
+            setInfoBlock(
+                getPercentagesForMint(d.properties.MINT),
+                d.properties.MINT,
+                'AUTHORITY'
+            );
         }
 
         function hideInfo() {
@@ -351,20 +437,49 @@ var Map = (function ($, d3, moment) {
                 info.selectAll('*').remove();
         }
 
+        function setInfoBlock(percentages, defaultLabel, labelKey) {
+            if (isZooming)
+                return;
+
+            var margin = 5, height = margin, defaultWidth = 250 + margin;
+
+            var rect = info.append('rect')
+                .attr('fill', '#EFF0F1')
+                .attr('fill-opacity', '0.6');
+
+            setInfo(margin, height, percentages.percentage, defaultLabel, true);
+            percentages.parts.forEach(function (part, i) {
+                var width = defaultWidth + margin;
+                if (i % 2 === 0) {
+                    width = margin;
+                    height += (infoArcRadius * 2) + 10 + margin;
+                }
+
+                setInfo(width, height, part.percentage, part[labelKey], false);
+            });
+            height += (infoArcRadius * 2) + 10;
+
+            rect.attr('width', (defaultWidth * 2) + margin).attr('height', height);
+        }
+
         function setInfo(width, height, percentage, label, isBold) {
             var g = info.append('g').attr('transform', 'translate(' + width + ',' + height + ')');
 
             g.append('g')
                 .attr('transform', 'translate(' + infoArcRadius + ',' + infoArcRadius + ')')
-                .attr('stroke', 'grey')
                 .selectAll('.arc')
                 .data(pie([100 - percentage, percentage]))
                 .enter()
                 .append('path')
                 .attr('class', 'arc')
                 .attr('d', infoArc)
+                .attr('stroke', function (d) {
+                    if (d.startAngle === d.endAngle)
+                        return 'none';
+                    return pieColor;
+                })
                 .style('fill', function (d, i) {
-                    return (i === 0) ? 'white' : '#337ab7';
+                    return (i === 0) ? 'white' : pieColor;
                 });
 
             var text = g.append('text')
@@ -467,6 +582,10 @@ var Map = (function ($, d3, moment) {
             map.attr('transform', 'translate(' + d3.event.translate + ') scale(' + d3.event.scale + ')');
             map.selectAll('.authority').style('stroke-width', 1 / d3.event.scale + 'px');
             map.selectAll('.mint').style('stroke-width', 1 / d3.event.scale + 'px');
+        }
+
+        function onYear(year) {
+            console.log(year);
         }
     };
 })(jQuery, d3, moment);
