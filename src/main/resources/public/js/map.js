@@ -115,6 +115,8 @@ var Map = (function ($, d3, moment) {
                     .on('mouseover', onHoverAuthority)
                     .on('mouseout', hideInfo);
 
+                onYear(yearRange.domain()[0]);
+
                 getMints(function (mints) {
                     that.mintsFeatures = mints;
 
@@ -585,7 +587,15 @@ var Map = (function ($, d3, moment) {
         }
 
         function onYear(year) {
-            console.log(year);
+            map.selectAll('.authority')
+                .data(that.authoritiesFeatures)
+                .attr('visibility', function (d) {
+                    if (d.properties.YEARfrom && d.properties.YEARto) {
+                        if ((year < d.properties.YEARfrom) || (year > d.properties.YEARto))
+                            return 'hidden';
+                    }
+                    return 'visible';
+                });
         }
     };
 })(jQuery, d3, moment);
