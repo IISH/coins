@@ -4,13 +4,10 @@ dataverse:
   connectTimeoutMs: 5000
   readTimeoutMs: 10000
 
-# The datasets PIDs and keys
+# The datasets Dataverse ids
 datasets:
-  coins:
-    pid: "10622/D5WXZZ"
-  wages:
-    pid: "10622/..."
-    key: "12345"
+  coins: 1496
+  wages: 1488
 
 # Fields of the CSV
 fields:

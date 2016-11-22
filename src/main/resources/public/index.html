@@ -116,23 +116,19 @@
 
                     <div class="panel-group" id="config" role="tablist" aria-multiselectable="true">
                         <div class="panel panel-default">
-                            <div class="panel-heading" role="tab" id="headingTableConfig">
+                            <div class="panel-heading" role="tab" id="headingTableConfig"
+                                 data-toggle="collapse" data-target="#tableConfig"
+                                 aria-expanded="false" aria-controls="headingTableConfig">
                                 <h4 class="panel-title">
-                                    <a role="button" data-toggle="collapse" data-parent="#config"
-                                       href="#tableConfig" aria-expanded="false" aria-controls="headingTableConfig">
-                                        Table
-                                    </a>
+                                    Table
                                 </h4>
                             </div>
                             <div id="tableConfig" class="panel-collapse collapse in" role="tabpanel"
                                  aria-labelledby="headingTableConfig">
                                 <div class="panel-body">
                                     <div class="form-group form-group-sm">
-                                        <div class="col-sm-12">
+                                        <div class="col-xs-12">
                                             <label class=" control-label">Columns</label>
-                                        </div>
-
-                                        <div class="col-sm-12">
                                             <select class="form-control" name="table-columns" id="tableColumns"
                                                     multiple>
                                             </select>
@@ -143,12 +139,11 @@
                         </div>
 
                         <div class="panel panel-default">
-                            <div class="panel-heading" role="tab" id="headingChartConfig">
+                            <div class="panel-heading collapsed" role="tab" id="headingChartConfig"
+                                 data-toggle="collapse" data-target="#chartConfig"
+                                 aria-expanded="true" aria-controls="headingChartConfig">
                                 <h4 class="panel-title">
-                                    <a class="collapsed" role="button" data-toggle="collapse" data-parent="#config"
-                                       href="#chartConfig" aria-expanded="true" aria-controls="headingChartConfig">
-                                        Chart
-                                    </a>
+                                    Chart
                                 </h4>
                             </div>
                             <div id="chartConfig" class="panel-collapse collapse" role="tabpanel"

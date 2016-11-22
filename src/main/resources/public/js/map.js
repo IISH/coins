@@ -26,10 +26,10 @@ var Map = (function ($, d3, moment) {
             .attr('cursor', 'pointer');
 
         var projection = d3.geo.mercator()
-            .scale(8000)
+            .scale(7500)
             .center([0, 51.5])
             .rotate([-4.8, 0])
-            .translate([(width / 2) + 200, height / 2]);
+            .translate([(width / 2) + 100, height / 2]);
 
         var path = d3.geo.path().projection(projection);
 
@@ -74,9 +74,6 @@ var Map = (function ($, d3, moment) {
         var drag = d3.behavior.drag()
             .on('dragstart', function () {
                 d3.event.sourceEvent.stopPropagation();
-            })
-            .on('dragend', function () {
-                onYear(lastYearVal);
             });
 
         var map = createMap();
@@ -211,7 +208,6 @@ var Map = (function ($, d3, moment) {
 
         function createSlider() {
             var slider = svg.append('g')
-                .style('pointer-events', 'none')
                 .attr('class', 'slider')
                 .attr('transform', 'translate(70,10)');
 
@@ -295,6 +291,7 @@ var Map = (function ($, d3, moment) {
                 lastYearVal = Math.round(yearRange.invert(d3.event.x));
                 handleYear.text(lastYearVal);
                 handle.attr('transform', 'translate(' + yearRange(yearRange.invert(d3.event.x)) + ',0)');
+                onYear(lastYearVal);
             });
 
             return slider;
@@ -312,13 +309,9 @@ var Map = (function ($, d3, moment) {
                 if (error) return console.error(error);
 
                 var features = [];
-                var skip = ['Utrecht (Province)', 'Friesland (Province)', 'Groningen', 'Guelders (Province)', 'Holland (Province)'];
-
                 authorities.features.forEach(function (feature) {
                     if ((feature.properties !== undefined) && (feature.properties.AUTHORITY !== null)
-                        && (feature.properties.AUTHORITY.indexOf('Kingdom') === -1)
-                        && (skip.indexOf(feature.properties.AUTHORITY) === -1)) {
-
+                        && (feature.properties.AUTHORITY.indexOf('Kingdom') === -1)) {
                         features.push(feature);
                     }
                 });
@@ -590,8 +583,11 @@ var Map = (function ($, d3, moment) {
             map.selectAll('.authority')
                 .data(that.authoritiesFeatures)
                 .attr('visibility', function (d) {
-                    if (d.properties.YEARfrom && d.properties.YEARto) {
-                        if ((year < d.properties.YEARfrom) || (year > d.properties.YEARto))
+                    if (d.properties.DATEfrom && d.properties.DATEto) {
+                        var from = moment(d.properties.DATEfrom, 'YYYY/MM/DD');
+                        var to = moment(d.properties.DATEto, 'YYYY/MM/DD');
+
+                        if ((year < from.year()) || (year > to.year()))
                             return 'hidden';
                     }
                     return 'visible';

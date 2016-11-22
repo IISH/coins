@@ -203,6 +203,8 @@ var Chart = (function ($, c3) {
                     enabled: true
                 }
             });
+
+            $(elem).find("defs clipPath[id$='-clip-xaxis']").find('rect').attr('x', 0);
         }
     };
 })(jQuery, c3);
