@@ -6,8 +6,10 @@ dataverse:
 
 # The datasets Dataverse ids
 datasets:
-  coins: 1496
+  coins: 1505
   wages: 1488
+  geoMint: 1508
+  geoAuthorities: 1514
 
 # Fields of the CSV
 fields:

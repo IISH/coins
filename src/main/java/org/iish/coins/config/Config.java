@@ -19,5 +19,7 @@ public class Config {
     public static class Datasets {
         public int coins;
         public int wages;
+        public int geoMint;
+        public int geoAuthorities;
     }
 }

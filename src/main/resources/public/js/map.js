@@ -14,9 +14,6 @@ var Map = (function ($, d3, moment) {
         this.authorities = {};
         this.mints = {};
 
-        this.totalDaysPerAuthority = {};
-        this.totalDaysPerMint = {};
-
         var width = 1110,
             height = 1000;
 
@@ -305,7 +302,7 @@ var Map = (function ($, d3, moment) {
         }
 
         function getAuthorities(callback) {
-            d3.json('/geojson/authorities.json', function (error, authorities) {
+            d3.json('/geo/authorities', function (error, authorities) {
                 if (error) return console.error(error);
 
                 var features = [];
@@ -321,7 +318,7 @@ var Map = (function ($, d3, moment) {
         }
 
         function getMints(callback) {
-            d3.json('/geojson/mint.json', function (error, mint) {
+            d3.json('/geo/mints', function (error, mint) {
                 if (error) return console.error(error);
 
                 var mints = [];
@@ -337,11 +334,9 @@ var Map = (function ($, d3, moment) {
                             features.push(feature);
                         }
 
-                        props.range = moment.range(
-                            moment(props.DATEfrom, 'YYYY/MM/DD'),
-                            moment(props.DATEto, 'YYYY/MM/DD').add(1, 'd')
-                        );
-                        props.days = props.range.end.diff(props.range.start, 'days');
+                        var from = moment(props.DATEfrom, 'YYYY/MM/DD');
+                        var to = moment(props.DATEto, 'YYYY/MM/DD');
+                        props.years = getYears(from.year(), to.year());
 
                         $.addToObject(that.authorities, props.AUTHORITY, [props], function (val) {
                             val.push(props);
@@ -351,20 +346,6 @@ var Map = (function ($, d3, moment) {
                         $.addToObject(that.mints, props.MINT, [props], function (val) {
                             val.push(props);
                             return val;
-                        });
-
-                        if (!(props.AUTHORITY in that.totalDaysPerAuthority))
-                            that.totalDaysPerAuthority[props.AUTHORITY] = {};
-
-                        $.addToObject(that.totalDaysPerAuthority[props.AUTHORITY], props.MINT, props.days, function (val) {
-                            return val + props.days;
-                        });
-
-                        if (!(props.MINT in that.totalDaysPerMint))
-                            that.totalDaysPerMint[props.MINT] = {};
-
-                        $.addToObject(that.totalDaysPerMint[props.MINT], props.AUTHORITY, props.days, function (val) {
-                            return val + props.days;
                         });
                     }
                 });
@@ -498,79 +479,85 @@ var Map = (function ($, d3, moment) {
         }
 
         function getPercentagesForAuthority(authority) {
-            return getPercentages('AUTHORITY', 'MINT', authority, that.authorities, that.totalDaysPerAuthority)
+            return getPercentages('AUTHORITY', 'MINT', authority, that.authorities);
         }
 
         function getPercentagesForMint(mint) {
-            return getPercentages('MINT', 'AUTHORITY', mint, that.mints, that.totalDaysPerMint)
+            return getPercentages('MINT', 'AUTHORITY', mint, that.mints);
         }
 
-        function getPercentages(keyFilter, keyObtain, value, props, totalDaysList) {
+        function getPercentages(keyFilter, keyObtain, value, props) {
             // Make sure we have data to gain a coverage percentage
             if (value in props) {
-                var propsOld = props[value];
-                var propsNew = [];
+                // Collect all years to map
+                var yearsPerKey = {};
+                props[value].forEach(function (p) {
+                    if (yearsPerKey[p[keyObtain]] === undefined)
+                        yearsPerKey[p[keyObtain]] = {years: [], totalYears: 0};
+
+                    yearsPerKey[p[keyObtain]] = {
+                        years: p.years.concat(yearsPerKey[p[keyObtain]].years),
+                        totalYears: p.years.length + yearsPerKey[p[keyObtain]].totalYears
+                    };
+                });
 
                 // Try to map all the filtered data
                 that.data.forEach(function (d) {
-                    if (d[keyFilter] === value) {
-                        // Compute the range of this data
-                        var range = moment.range(
-                            moment(new Date(d.DATEfrom.year, d.DATEfrom.month - 1, d.DATEfrom.day)),
-                            moment(new Date(d.DATEto.year, d.DATEto.month - 1, d.DATEto.day)).add(1, 'd')
-                        );
+                    var filterValues = getValues(d, keyFilter);
+                    if ((filterValues.indexOf(value) >= 0) && (d.QTTYcoins !== undefined)) {
+                        var years = getYears(d.DATEfrom.year, d.DATEto.year);
 
-                        // Go over all the dates we have, and match this range with the range of the data
-                        propsOld.forEach(function (p) {
-                            var propsAdded = false;
-
-                            // Every range that overlaps, remove that of the range
-                            if (p[keyObtain] === d[keyObtain]) {
-                                if (p.range.overlaps(range)) {
-                                    p.range.subtract(range).forEach(function (rangesLeft) {
-                                        var newProps = {MINT: p.MINT, AUTHORITY: p.AUTHORITY};
-                                        newProps.range = rangesLeft;
-                                        newProps.days = newProps.range.end.diff(newProps.range.start, 'days');
-                                        propsNew.push(newProps);
-                                    });
-                                    propsAdded = true;
-                                }
+                        // Go over all the years we have, and match these years with the years of the data
+                        $.forEachInObject(yearsPerKey, function (key, yearsObj) {
+                            // All years that match, remove those
+                            var obtainValues = getValues(d, keyObtain);
+                            if (obtainValues.indexOf(key) >= 0) {
+                                yearsObj.years = yearsObj.years.filter(function (year) {
+                                    return years.indexOf(year) < 0;
+                                });
                             }
-
-                            if (!propsAdded)
-                                propsNew.push(p);
                         });
-
-                        propsOld = propsNew;
-                        propsNew = [];
                     }
                 });
 
                 // Whatever ranges we have left, are the ranges we could not map to the data
                 var percentages = [];
-                $.forEachInObject(totalDaysList[value], function (val, totalDays) {
-                    var daysLeft = propsOld.reduce(function (days, p) {
-                        if (p[keyObtain] === val)
-                            return days + p.days;
-                        return days;
-                    }, 0);
-
-                    var obj = {percentage: 100 - Math.round(daysLeft / (totalDays / 100))};
-                    obj[keyObtain] = val;
+                $.forEachInObject(yearsPerKey, function (key, yearsObj) {
+                    var obj = {percentage: 100 - Math.round(yearsObj.years.length / (yearsObj.totalYears / 100))};
+                    obj[keyObtain] = key;
 
                     percentages.push(obj);
                 });
 
-                var total = 0;
-                percentages.forEach(function (p) {
-                    total += p.percentage;
-                });
+                var total = percentages.reduce(function (t, p) {
+                    return t + p.percentage;
+                }, 0);
                 var avg = total / percentages.length;
 
                 return {percentage: avg, parts: percentages};
             }
 
             return {percentage: 0, parts: []};
+        }
+
+        function getYears(from, to) {
+            var years = [];
+            for (var year = from; year <= to; year++) {
+                years.push(year);
+            }
+            return years;
+        }
+
+        function getValues(data, key) {
+            var values = data[key];
+            if ((values === null) || (values === undefined))
+                return [];
+
+            return values.split('/').map(function (val) {
+                if (val.substr(val.length - 1) === '?')
+                    return val.substr(0, val.length - 1).trim();
+                return val.trim();
+            });
         }
 
         function zoomed() {

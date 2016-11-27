@@ -1,5 +1,6 @@
 package org.iish.coins.dataset;
 
+import com.google.common.io.ByteStreams;
 import com.google.inject.Singleton;
 import org.iish.coins.config.Config;
 import org.iish.coins.record.Csv;
@@ -27,6 +28,12 @@ public class Datasets {
 
     private List<Record> cachedCsv = new ArrayList<>();
     private LocalDate dateCachedCsv;
+
+    private byte[] cachedGeoMints;
+    private LocalDate dateCachedGeoMints;
+
+    private byte[] cachedGeoAuthorities;
+    private LocalDate dateCachedGeoAuthorities;
 
     /**
      * Uses the provided configuration and Dataverse API client to obtain the datasets.
@@ -62,5 +69,41 @@ public class Datasets {
             }
         }
         return cachedCsv;
+    }
+
+    public byte[] getGeoAuthorities() {
+        if ((dateCachedGeoAuthorities == null) || dateCachedGeoAuthorities.isBefore(LocalDate.now().minusDays(1))) {
+            try {
+                InputStream geoAuthorities = dataverseApiClient.getFileById(config.datasets.geoAuthorities);
+
+                cachedGeoAuthorities = ByteStreams.toByteArray(geoAuthorities);
+                dateCachedGeoAuthorities = LocalDate.now();
+            }
+            catch (DataverseException de) {
+                LOGGER.error("Failed to load the data from Dataverse!", de);
+            }
+            catch (IOException ioe) {
+                LOGGER.error("Failed to read the GeoJSON file!", ioe);
+            }
+        }
+        return cachedGeoAuthorities;
+    }
+
+    public byte[] getGeoMints() {
+        if ((dateCachedGeoMints == null) || dateCachedGeoMints.isBefore(LocalDate.now().minusDays(1))) {
+            try {
+                InputStream geoMints = dataverseApiClient.getFileById(config.datasets.geoMint);
+
+                cachedGeoMints = ByteStreams.toByteArray(geoMints);
+                dateCachedGeoMints = LocalDate.now();
+            }
+            catch (DataverseException de) {
+                LOGGER.error("Failed to load the data from Dataverse!", de);
+            }
+            catch (IOException ioe) {
+                LOGGER.error("Failed to read the GeoJSON file!", ioe);
+            }
+        }
+        return cachedGeoMints;
     }
 }
