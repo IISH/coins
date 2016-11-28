@@ -4,12 +4,20 @@ dataverse:
   connectTimeoutMs: 5000
   readTimeoutMs: 10000
 
-# The datasets Dataverse ids
+# The datasets from Dataverse
 datasets:
-  coins: 1505
-  wages: 1488
-  geoMint: 1508
-  geoAuthorities: 1514
+  coins:
+    pid: "10622/D5WXZZ"
+    label: "_Combined.csv"
+  wages:
+    pid: "10622/D5WXZZ"
+    label: "Wage series (dummy).tab"
+  geoMint:
+    pid: "10622/MLVN7A"
+    label: "Mint houses.geojson"
+  geoAuthorities:
+    pid: "10622/HPIC74"
+    label: "Mint authorities.geojson"
 
 # Fields of the CSV
 fields:

@@ -39,7 +39,9 @@ var Table = (function ($, moment) {
                 if (that.variables[field].date) {
                     columnData.type = 'custom-date';
                     columnData.render = function (date) {
-                        return date.day + '-' + date.month + '-' + date.year;
+                        if (date && date.day && date.month && date.year)
+                            return date.day + '-' + date.month + '-' + date.year;
+                        return '<i>Unknown</i>';
                     };
                 }
 

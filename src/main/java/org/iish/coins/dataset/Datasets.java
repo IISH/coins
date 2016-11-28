@@ -55,8 +55,13 @@ public class Datasets {
     public List<Record> getCsv() {
         if ((dateCachedCsv == null) || dateCachedCsv.isBefore(LocalDate.now().minusDays(1))) {
             try {
-                InputStream coinsStream = dataverseApiClient.getFileById(config.datasets.coins);
-                InputStream wagesStream = dataverseApiClient.getFileById(config.datasets.wages);
+                DataverseFile coinsFile =
+                        dataverseApiClient.getFileForPidAndLabel(config.datasets.coins.pid, config.datasets.coins.label);
+                DataverseFile wagesFile =
+                        dataverseApiClient.getFileForPidAndLabel(config.datasets.wages.pid, config.datasets.wages.label);
+
+                InputStream coinsStream = dataverseApiClient.getFileById(coinsFile.getId());
+                InputStream wagesStream = dataverseApiClient.getFileById(wagesFile.getId());
 
                 cachedCsv = new Csv().parse(coinsStream, wagesStream);
                 dateCachedCsv = LocalDate.now();
@@ -74,7 +79,9 @@ public class Datasets {
     public byte[] getGeoAuthorities() {
         if ((dateCachedGeoAuthorities == null) || dateCachedGeoAuthorities.isBefore(LocalDate.now().minusDays(1))) {
             try {
-                InputStream geoAuthorities = dataverseApiClient.getFileById(config.datasets.geoAuthorities);
+                DataverseFile geoAuthoritiesFile =
+                        dataverseApiClient.getFileForPidAndLabel(config.datasets.geoAuthorities.pid, config.datasets.geoAuthorities.label);
+                InputStream geoAuthorities = dataverseApiClient.getFileById(geoAuthoritiesFile.getId());
 
                 cachedGeoAuthorities = ByteStreams.toByteArray(geoAuthorities);
                 dateCachedGeoAuthorities = LocalDate.now();
@@ -92,7 +99,9 @@ public class Datasets {
     public byte[] getGeoMints() {
         if ((dateCachedGeoMints == null) || dateCachedGeoMints.isBefore(LocalDate.now().minusDays(1))) {
             try {
-                InputStream geoMints = dataverseApiClient.getFileById(config.datasets.geoMint);
+                DataverseFile geoMintsFile =
+                        dataverseApiClient.getFileForPidAndLabel(config.datasets.geoMint.pid, config.datasets.geoMint.label);
+                InputStream geoMints = dataverseApiClient.getFileById(geoMintsFile.getId());
 
                 cachedGeoMints = ByteStreams.toByteArray(geoMints);
                 dateCachedGeoMints = LocalDate.now();
