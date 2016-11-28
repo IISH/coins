@@ -15,7 +15,7 @@ var Map = (function ($, d3, moment) {
         this.mints = {};
 
         var width = 1110,
-            height = 1000;
+            height = 1050;
 
         var svg = d3.select(elem).append('svg')
             .attr('width', width)
@@ -109,8 +109,6 @@ var Map = (function ($, d3, moment) {
                     .on('mouseover', onHoverAuthority)
                     .on('mouseout', hideInfo);
 
-                onYear(yearRange.domain()[0]);
-
                 getMints(function (mints) {
                     that.mintsFeatures = mints;
 
@@ -128,6 +126,7 @@ var Map = (function ($, d3, moment) {
                         .on('mouseover', onHoverMint)
                         .on('mouseout', hideInfo);
 
+                    onYear(yearRange.domain()[0]);
                     that.render();
                 });
             });
@@ -278,7 +277,7 @@ var Map = (function ($, d3, moment) {
                 });
 
             slider.append('text')
-                .text('Show/hide authorities by year')
+                .text('Show/hide mint houses/authorities by year')
                 .attr('x', 100)
                 .attr('text-anchor', 'middle')
                 .attr('transform', 'translate(0,50)')
@@ -305,12 +304,8 @@ var Map = (function ($, d3, moment) {
             d3.json('/geo/authorities', function (error, authorities) {
                 if (error) return console.error(error);
 
-                var features = [];
-                authorities.features.forEach(function (feature) {
-                    if ((feature.properties !== undefined) && (feature.properties.AUTHORITY !== null)
-                        && (feature.properties.AUTHORITY.indexOf('Kingdom') === -1)) {
-                        features.push(feature);
-                    }
+                var features = authorities.features.filter(function (feature) {
+                    return (feature.properties !== undefined) && (feature.properties.AUTHORITY !== null);
                 });
 
                 callback(features);
@@ -503,20 +498,23 @@ var Map = (function ($, d3, moment) {
 
                 // Try to map all the filtered data
                 that.data.forEach(function (d) {
-                    var filterValues = getValues(d, keyFilter);
-                    if ((filterValues.indexOf(value) >= 0) && (d.QTTYcoins !== undefined)) {
-                        var years = getYears(d.DATEfrom.year, d.DATEto.year);
+                    if (d.QTTYcoins !== undefined) {
+                        var filterValues = getValues(d, keyFilter);
 
-                        // Go over all the years we have, and match these years with the years of the data
-                        $.forEachInObject(yearsPerKey, function (key, yearsObj) {
-                            // All years that match, remove those
-                            var obtainValues = getValues(d, keyObtain);
-                            if (obtainValues.indexOf(key) >= 0) {
-                                yearsObj.years = yearsObj.years.filter(function (year) {
-                                    return years.indexOf(year) < 0;
-                                });
-                            }
-                        });
+                        if (filterValues.indexOf(value) >= 0) {
+                            var years = getYears(d.DATEfrom.year, d.DATEto.year);
+
+                            // Go over all the years we have, and match these years with the years of the data
+                            $.forEachInObject(yearsPerKey, function (key, yearsObj) {
+                                // All years that match, remove those
+                                var obtainValues = getValues(d, keyObtain);
+                                if (obtainValues.indexOf(key) >= 0) {
+                                    yearsObj.years = yearsObj.years.filter(function (year) {
+                                        return years.indexOf(year) < 0;
+                                    });
+                                }
+                            });
+                        }
                     }
                 });
 
@@ -578,6 +576,22 @@ var Map = (function ($, d3, moment) {
                             return 'hidden';
                     }
                     return 'visible';
+                });
+
+            map.selectAll('.mint')
+                .data(that.mintsFeatures)
+                .attr('visibility', function (d) {
+                    var visibility = 'hidden';
+                    that.mints[d.properties.MINT].forEach(function (props) {
+                        if (props.DATEfrom && props.DATEto) {
+                            var from = moment(props.DATEfrom, 'YYYY/MM/DD');
+                            var to = moment(props.DATEto, 'YYYY/MM/DD');
+
+                            if ((year >= from.year()) && (year <= to.year()))
+                                visibility = 'visible';
+                        }
+                    });
+                    return visibility;
                 });
         }
     };
