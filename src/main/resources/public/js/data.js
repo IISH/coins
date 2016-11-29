@@ -191,7 +191,7 @@ var Data = (function ($) {
             dataCallbacks.push(callback);
         };
 
-        $.getJSON('/fields', function (data) {
+        $.getJSON('fields', function (data) {
             that.fields = data;
 
             var allSelects = $('select');
@@ -259,7 +259,7 @@ var Data = (function ($) {
                 callback();
             });
 
-            $.getJSON('/json', params, function (data) {
+            $.getJSON('json', params, function (data) {
                 that.values = data.values;
                 that.records = data.records;
 
