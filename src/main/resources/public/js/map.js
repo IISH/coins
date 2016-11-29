@@ -309,7 +309,7 @@ var Map = (function ($, d3, moment) {
         }
 
         function getAuthorities(callback) {
-            d3.json('/geo/authorities', function (error, authorities) {
+            d3.json('geo/authorities', function (error, authorities) {
                 if (error) return console.error(error);
 
                 var features = authorities.features.filter(function (feature) {
@@ -321,7 +321,7 @@ var Map = (function ($, d3, moment) {
         }
 
         function getMints(callback) {
-            d3.json('/geo/mints', function (error, mint) {
+            d3.json('geo/mints', function (error, mint) {
                 if (error) return console.error(error);
 
                 var mints = [];
