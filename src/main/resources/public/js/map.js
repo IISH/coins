@@ -209,10 +209,13 @@ var Map = (function ($, d3, moment) {
         }
 
         function createSlider() {
+            var left = 70;
             var slider = svg.append('g')
                 .attr('class', 'slider')
-                .attr('transform', 'translate(70,10)')
-                .attr('pointer-events', 'all');
+                .attr('transform', 'translate(' + left + ',10)')
+                .attr('pointer-events', 'all')
+                .style('cursor', 'crosshair')
+                .call(drag);
 
             slider.append('line')
                 .attr('class', 'track')
@@ -244,10 +247,8 @@ var Map = (function ($, d3, moment) {
                 .attr('transform', 'translate(0,15)')
                 .style({
                     'stroke-linecap': 'round',
-                    'stroke-width': '50px',
-                    'cursor': 'crosshair'
-                })
-                .call(drag);
+                    'stroke-width': '50px'
+                });
 
             slider.insert('g', '.track-overlay')
                 .attr('class', 'ticks')
@@ -290,9 +291,10 @@ var Map = (function ($, d3, moment) {
                 .style('font-size', '10px');
 
             drag.on('drag', function () {
-                lastYearVal = Math.round(yearRange.invert(d3.event.x));
+                var x = d3.event.x - left;
+                lastYearVal = Math.round(yearRange.invert(x));
                 handleYear.text(lastYearVal);
-                handle.attr('transform', 'translate(' + yearRange(yearRange.invert(d3.event.x)) + ',0)');
+                handle.attr('transform', 'translate(' + yearRange(yearRange.invert(x)) + ',0)');
                 onYear(lastYearVal);
             });
 
