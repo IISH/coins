@@ -132,6 +132,8 @@ var Map = (function ($, d3, moment) {
                         .on('mouseout', hideInfo);
 
                     onYear(yearRange.domain()[0]);
+                    updateAuthoritiesPercentages();
+                    updateMintsPercentages();
                 });
             });
 
@@ -209,7 +211,8 @@ var Map = (function ($, d3, moment) {
         function createSlider() {
             var slider = svg.append('g')
                 .attr('class', 'slider')
-                .attr('transform', 'translate(70,10)');
+                .attr('transform', 'translate(70,10)')
+                .attr('pointer-events', 'all');
 
             slider.append('line')
                 .attr('class', 'track')
@@ -241,7 +244,6 @@ var Map = (function ($, d3, moment) {
                 .attr('transform', 'translate(0,15)')
                 .style({
                     'stroke-linecap': 'round',
-                    'pointer-events': 'stroke',
                     'stroke-width': '50px',
                     'cursor': 'crosshair'
                 })
