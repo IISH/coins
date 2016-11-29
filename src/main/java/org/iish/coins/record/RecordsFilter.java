@@ -1,6 +1,7 @@
 package org.iish.coins.record;
 
 import org.iish.coins.config.Config;
+import org.iish.coins.dataset.Datasets;
 import org.iish.coins.util.Getter;
 import spark.Request;
 
@@ -19,7 +20,7 @@ import java.util.stream.Stream;
 @Singleton
 public class RecordsFilter {
     private @Inject Config config;
-    private @Inject List<Record> records;
+    private @Inject Datasets datasets;
 
     /**
      * For the given request, filter the list of records.
@@ -28,7 +29,7 @@ public class RecordsFilter {
      * @return The filtered records.
      */
     public List<Record> getRecords(Request request) {
-        Stream<Record> recordStream = records.parallelStream();
+        Stream<Record> recordStream = datasets.getCsv().parallelStream();
 
         String years = request.queryParams("years");
         LocalDate from = getDate(request.queryParams("from"), true);
@@ -39,19 +40,21 @@ public class RecordsFilter {
 
         Getter<Record> recordGetter = new Getter<>(Record.class);
         for (String param : request.queryParams()) {
-            if (recordGetter.hasName(param)) {
+            String name = param.endsWith("[]") ? param.substring(0, param.length() - 2) : param;
+
+            if (recordGetter.hasName(name)) {
                 String[] values = request.queryParamsValues(param);
 
-                if (recordGetter.getType(param) == String.class) {
+                if (recordGetter.getType(name) == String.class) {
                     recordStream = recordStream.filter(record -> {
-                        String value = (String) recordGetter.getValue(param, record);
+                        String value = (String) recordGetter.getValue(name, record);
                         return filterOnString(value, values);
                     });
                 }
 
-                if (recordGetter.getType(param) == BigDecimal.class) {
+                if (recordGetter.getType(name) == BigDecimal.class) {
                     recordStream = recordStream.filter(record -> {
-                        BigDecimal value = (BigDecimal) recordGetter.getValue(param, record);
+                        BigDecimal value = (BigDecimal) recordGetter.getValue(name, record);
                         return filterOnBigDecimal(value, values);
                     });
                 }

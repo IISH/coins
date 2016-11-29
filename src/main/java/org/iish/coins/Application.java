@@ -7,6 +7,7 @@ import com.google.inject.Injector;
 import org.iish.coins.config.AcceptAllTrustManager;
 import org.iish.coins.config.CoinsModule;
 import org.iish.coins.config.Config;
+import org.iish.coins.dataset.Datasets;
 import org.iish.coins.record.Csv;
 import org.iish.coins.record.Record;
 import org.iish.coins.record.RecordsFilter;
@@ -33,6 +34,7 @@ public class Application implements SparkApplication {
 
     private Config config;
     private RecordsFilter recordsFilter;
+    private Datasets datasets;
 
     /**
      * Run the application from the command line with the packaged Jetty servlet container.
@@ -61,6 +63,7 @@ public class Application implements SparkApplication {
         Injector injector = Guice.createInjector(new CoinsModule());
         this.config = injector.getInstance(Config.class);
         this.recordsFilter = injector.getInstance(RecordsFilter.class);
+        this.datasets = injector.getInstance(Datasets.class);
     }
 
     /**
@@ -71,17 +74,21 @@ public class Application implements SparkApplication {
         staticFiles.expireTime(60 * 60 * 24); // 1 day in seconds
 
         get("/fields", this::fields, GSON::toJson);
+        get("/geo/mints", this::geoMints);
+        get("/geo/authorities", this::geoAuthorities);
         get("/json", this::json, GSON::toJson);
         get("/csv", this::csv);
 
         after((req, res) -> {
             res.header("Content-Encoding", "gzip");
-            if (req.pathInfo().equals("/csv")) {
-                res.type("text/csv; charset=utf-8");
-                res.header("Content-Disposition", "attachment;filename=mint.csv");
-            }
-            else {
-                res.type("text/json; charset=utf-8");
+
+            switch (req.pathInfo()) {
+                case "/csv":
+                    res.type("text/csv; charset=utf-8");
+                    res.header("Content-Disposition", "attachment;filename=mint.csv");
+                    break;
+                default:
+                    res.type("text/json; charset=utf-8");
             }
         });
 
@@ -101,6 +108,28 @@ public class Application implements SparkApplication {
      */
     private Map<String, String> fields(Request request, Response response) {
         return config.fields;
+    }
+
+    /**
+     * Returns the mint houses GeoJSON.
+     *
+     * @param request  The request.
+     * @param response The response.
+     * @return The GeoJSON.
+     */
+    private byte[] geoMints(Request request, Response response) {
+        return datasets.getGeoMints();
+    }
+
+    /**
+     * Returns the authorities GeoJSON.
+     *
+     * @param request  The request.
+     * @param response The response.
+     * @return The GeoJSON.
+     */
+    private byte[] geoAuthorities(Request request, Response response) {
+        return datasets.getGeoAuthorities();
     }
 
     /**

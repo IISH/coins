@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Mint production in the Low Countries, 1334-1830</title>
+    <title>Coin production in the Low Countries, 1334-1830</title>
     <link rel="stylesheet" href="css/bootstrap.min.css">
     <link rel="stylesheet" href="css/select2.min.css">
     <link rel="stylesheet" href="css/select2-bootstrap.min.css">
@@ -15,7 +15,7 @@
 <body>
 <div class="container">
     <div class="page-header">
-        <h1>Mint production in the Low Countries, 1334-1830</h1>
+        <h1>Coin production in the Low Countries, 1334-1830</h1>
     </div>
 
     <div id="query">
@@ -24,7 +24,7 @@
                 <div class="col-md-8">
                     <div class="form-group form-group-sm form-group-repeat criteria-block">
                         <div class="col-md-4">
-                            <select class="form-control" name="criteria-column">
+                            <select class="form-control" name="criteria-column-1">
                             </select>
                         </div>
 
@@ -32,29 +32,30 @@
                             <div class="col-md-3 text-center">
                                 <div class="btn-group btn-group-xs" data-toggle="buttons">
                                     <label class="btn btn-default active">
-                                        <input type="radio" autocomplete="off" name="negative-text" value="eq" checked>
+                                        <input type="radio" autocomplete="off" name="negative-text-1" value="eq"
+                                               checked>
                                         is
                                     </label>
                                     <label class="btn btn-default">
-                                        <input type="radio" autocomplete="off" name="negative-text" value="ne">
+                                        <input type="radio" autocomplete="off" name="negative-text-1" value="ne">
                                         not
                                     </label>
                                 </div>
 
                                 <div class="btn-group btn-group-xs" data-toggle="buttons">
                                     <label class="btn btn-default active">
-                                        <input type="radio" autocomplete="off" name="contains" value="exact" checked>
+                                        <input type="radio" autocomplete="off" name="contains-1" value="exact" checked>
                                         exact
                                     </label>
                                     <label class="btn btn-default">
-                                        <input type="radio" autocomplete="off" name="contains" value="ctns">
+                                        <input type="radio" autocomplete="off" name="contains-1" value="ctns">
                                         contains
                                     </label>
                                 </div>
                             </div>
 
                             <div class="col-md-4">
-                                <input type="text" class="form-control" name="criteria-value"/>
+                                <input type="text" class="form-control" name="criteria-value-1"/>
                             </div>
                         </div>
 
@@ -62,22 +63,23 @@
                             <div class="col-md-3 text-center">
                                 <div class="btn-group btn-group-xs" data-toggle="buttons">
                                     <label class="btn btn-default active">
-                                        <input type="radio" autocomplete="off" name="negative-number" value="eq" checked>
+                                        <input type="radio" autocomplete="off" name="negative-number-1" value="eq"
+                                               checked>
                                         is between
                                     </label>
                                     <label class="btn btn-default">
-                                        <input type="radio" autocomplete="off" name="negative-number" value="ne">
+                                        <input type="radio" autocomplete="off" name="negative-number-1" value="ne">
                                         not between
                                     </label>
                                 </div>
                             </div>
 
                             <div class="col-md-2">
-                                <input type="text" class="form-control" name="criteria-min"/>
+                                <input type="text" class="form-control" name="criteria-min-1"/>
                             </div>
 
                             <div class="col-md-2">
-                                <input type="text" class="form-control" name="criteria-max"/>
+                                <input type="text" class="form-control" name="criteria-max-1"/>
                             </div>
                         </div>
 
@@ -114,24 +116,21 @@
 
                     <div class="panel-group" id="config" role="tablist" aria-multiselectable="true">
                         <div class="panel panel-default">
-                            <div class="panel-heading" role="tab" id="headingTableConfig">
+                            <div class="panel-heading" role="tab" id="headingTableConfig"
+                                 data-toggle="collapse" data-target="#tableConfig"
+                                 aria-expanded="false" aria-controls="headingTableConfig">
                                 <h4 class="panel-title">
-                                    <a role="button" data-toggle="collapse" data-parent="#config"
-                                       href="#tableConfig" aria-expanded="false" aria-controls="headingTableConfig">
-                                        Table
-                                    </a>
+                                    Table
                                 </h4>
                             </div>
                             <div id="tableConfig" class="panel-collapse collapse in" role="tabpanel"
                                  aria-labelledby="headingTableConfig">
                                 <div class="panel-body">
                                     <div class="form-group form-group-sm">
-                                        <div class="col-sm-12">
+                                        <div class="col-xs-12">
                                             <label class=" control-label">Columns</label>
-                                        </div>
-
-                                        <div class="col-sm-12">
-                                            <select class="form-control" name="table-columns" id="tableColumns" multiple>
+                                            <select class="form-control" name="table-columns" id="tableColumns"
+                                                    multiple>
                                             </select>
                                         </div>
                                     </div>
@@ -140,12 +139,11 @@
                         </div>
 
                         <div class="panel panel-default">
-                            <div class="panel-heading" role="tab" id="headingChartConfig">
+                            <div class="panel-heading collapsed" role="tab" id="headingChartConfig"
+                                 data-toggle="collapse" data-target="#chartConfig"
+                                 aria-expanded="true" aria-controls="headingChartConfig">
                                 <h4 class="panel-title">
-                                    <a class="collapsed" role="button" data-toggle="collapse" data-parent="#config"
-                                       href="#chartConfig" aria-expanded="true" aria-controls="headingChartConfig">
-                                        Chart
-                                    </a>
+                                    Chart
                                 </h4>
                             </div>
                             <div id="chartConfig" class="panel-collapse collapse" role="tabpanel"
@@ -176,24 +174,62 @@
 
                                         <div class="col-xs-10">
                                             <select class="form-control" name="variable" id="variable">
-                                                <option value="total">Number of records</option>
+                                                <option value="">Same as Y</option>
                                             </select>
                                         </div>
                                     </div>
 
                                     <div class="form-group form-group-sm text-center">
-                                       <div class="btn-group btn-group-sm" data-toggle="buttons">
+                                        <div class="btn-group btn-group-sm" data-toggle="buttons">
                                             <label class="btn btn-default">
                                                 <input type="radio" autocomplete="off" name="type" value="bar">
                                                 Bar chart
                                             </label>
                                             <label class="btn btn-default active">
-                                                <input type="radio" autocomplete="off" name="type" value="spline" checked>
+                                                <input type="radio" autocomplete="off" name="type" value="line"
+                                                       checked>
                                                 Line chart
                                             </label>
                                             <label class="btn btn-default">
                                                 <input type="radio" autocomplete="off" name="type" value="pie">
                                                 Pie chart
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="panel panel-default">
+                            <div class="panel-heading collapsed" role="tab" id="headingMapConfig"
+                                 data-toggle="collapse" data-target="#mapConfig"
+                                 aria-expanded="true" aria-controls="headingMapConfig">
+                                <h4 class="panel-title">
+                                    Map
+                                </h4>
+                            </div>
+                            <div id="mapConfig" class="panel-collapse collapse" role="tabpanel"
+                                 aria-labelledby="headingMapConfig">
+                                <div class="panel-body">
+                                    <div class="form-group form-group-sm">
+                                        <div class="checkbox">
+                                            <label>
+                                                <input type="checkbox" id="pctByYear" name="pctByYear" value="byYear">
+                                                <span class="text-left">
+                                                    Show data availability percentage by selected year in slider, <br/>
+                                                    rather than for all years in the filtered dataset
+                                                </span>
+                                            </label>
+                                        </div>
+
+                                        <div class="checkbox">
+                                            <label>
+                                                <input type="checkbox" id="showFilteredMints" name="showFilteredMints"
+                                                       value="filtered">
+                                                <span class="text-left">
+                                                    Show only the mint houses from the filtered dataset, <br/>
+                                                    rather than all mint houses
+                                                </span>
                                             </label>
                                         </div>
                                     </div>
@@ -221,20 +257,26 @@
             <a href="#table" data-toggle="tab" id="table-tab">Table</a>
         </li>
         <li role="presentation">
-            <a href="#stats" data-toggle="tab" id="stats-tab">Statistics</a>
+            <a href="#chart" data-toggle="tab" id="chart-tab">Chart</a>
         </li>
         <li role="presentation">
-            <a href="#chart" data-toggle="tab" id="chart-tab">Chart</a>
+            <a href="#map" data-toggle="tab" id="map-tab">Map</a>
         </li>
     </ul>
 
     <div class="tab-content">
         <div role="tabpanel" class="tab-pane active" id="table">
-            <table class="table table-striped table-hover" style="width:100%;">
-            </table>
+            <div class="loading"></div>
+            <div class="content" style="display:none;"></div>
         </div>
-        <div role="tabpanel" class="tab-pane" id="stats"></div>
-        <div role="tabpanel" class="tab-pane" id="chart"></div>
+        <div role="tabpanel" class="tab-pane" id="chart">
+            <div class="loading"></div>
+            <div class="content" style="display:none;"></div>
+        </div>
+        <div role="tabpanel" class="tab-pane" id="map">
+            <div class="loading"></div>
+            <div class="content" style="display:none;"></div>
+        </div>
     </div>
 </div>
 
@@ -246,6 +288,12 @@
 <script src="js/c3.min.js"></script>
 <script src="js/jquery.dataTables.min.js"></script>
 <script src="js/dataTables.bootstrap.min.js"></script>
-<script src="js/script.js"></script>
+<script src="js/moment.min.js"></script>
+
+<script src="js/data.js"></script>
+<script src="js/table.js"></script>
+<script src="js/chart.js"></script>
+<script src="js/map.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>

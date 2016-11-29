@@ -12,8 +12,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Provides access to Dataverse APIs to obtain datasets.
@@ -42,16 +42,16 @@ public class DataverseApiClient {
     }
 
     /**
-     * Returns the dataset files found in DataverseApiClient for the given PID.
+     * Find the dataset file using the DataverseApiClient for the given PID and label.
      *
-     * @param pid         The PID.
-     * @param contentType Filter out files that do no have this content type.
-     * @return A set with files found in DataverseApiClient.
+     * @param pid   The PID.
+     * @param label Filter out files that do no have this label.
+     * @return The file found in DataverseApiClient.
      * @throws DataverseException Thrown when not successful to obtain data about the files in DataverseApiClient.
      */
-    public Set<DataverseFile> getFilesForPid(String pid, String contentType) throws DataverseException {
+    public DataverseFile getFileForPidAndLabel(String pid, String label) throws DataverseException {
         try {
-            Set<DataverseFile> files = new HashSet<>();
+            List<DataverseFile> files = new ArrayList<>();
             URL url = new URL(this.url + API_DATASETS_PERSISTENT_ID + pid);
             HttpURLConnection connection = getConnection(url);
 
@@ -67,14 +67,14 @@ public class DataverseApiClient {
                     .getAsJsonArray("files")
                     .forEach(file -> {
                         JsonObject dataFile = file.getAsJsonObject().getAsJsonObject("datafile");
-                        if (dataFile.get("contentType").getAsString().equalsIgnoreCase(contentType)) {
+                        if ((label == null) || dataFile.get("name").getAsString().equalsIgnoreCase(label)) {
                             files.add(new DataverseFile(
                                     dataFile.get("id").getAsLong(), dataFile.get("name").getAsString()
                             ));
                         }
                     });
 
-            return files;
+            return (!files.isEmpty()) ? files.get(0) : null;
         }
         catch (IllegalStateException | IOException e) {
             throw new DataverseException("Could not obtain the files for PID " + pid, e);
@@ -90,7 +90,7 @@ public class DataverseApiClient {
      */
     public InputStream getFileById(long id) throws DataverseException {
         try {
-            URL url = new URL(this.url + API_ACCESS_DATAFILE + id);
+            URL url = new URL(this.url + API_ACCESS_DATAFILE + id + "?format=original");
             HttpURLConnection connection = getConnection(url);
 
             if (connection.getResponseCode() != 200) {
