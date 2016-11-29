@@ -3,7 +3,8 @@
     'use strict';
 
     var tableTab = $('#table'), chartTab = $('#chart'), mapTab = $('#map');
-    var data = new Data('#download', '#run', '#tableColumns', '#xAxis', '#yAxis', '#variable');
+    var data = new Data('#download', '#run', '#tableColumns', '#xAxis', '#yAxis', '#variable',
+        '#pctByYear', '#showFilteredMints');
     var table, chart, map = null;
     var loading = true;
 
@@ -26,7 +27,7 @@
 
         table.update(data.records, data.tableColumns.val());
         chart.update(data.records, data.xAxis.val(), data.yAxis.val(), data.variable.val());
-        map.update(data.records, data.values);
+        map.update(data.records, data.values, data.pctByYear.is(':checked'), data.showFilteredMints.is(':checked'));
 
         if (tableTab.is(':visible'))
             renderTable();

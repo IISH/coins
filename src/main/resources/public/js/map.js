@@ -78,9 +78,14 @@ var Map = (function ($, d3, moment) {
         var slider = createSlider();
         var info = createInfo();
 
-        this.update = function (data, values) {
+        this.update = function (data, values, pctByYear, showFilteredMints) {
             this.data = data;
             this.values = values;
+            this.pctByYear = pctByYear;
+            this.showFilteredMints = showFilteredMints;
+
+            this.yearsDiffAuthorities = {};
+            this.yearsDiffMints = {};
         };
 
         this.render = function () {
@@ -127,7 +132,6 @@ var Map = (function ($, d3, moment) {
                         .on('mouseout', hideInfo);
 
                     onYear(yearRange.domain()[0]);
-                    that.render();
                 });
             });
 
@@ -353,8 +357,14 @@ var Map = (function ($, d3, moment) {
             map.selectAll('.authority')
                 .data(that.authoritiesFeatures)
                 .attr('fill', function (d) {
+                    var auth = d.properties.AUTHORITY;
+
+                    // Compute the years difference if not done so already
+                    if (!(auth in that.yearsDiffAuthorities))
+                        that.yearsDiffAuthorities[auth] = getYearsDifferenceForAuthority(auth);
+
                     var fillColor = emptyColor;
-                    var percentages = getPercentagesForAuthority(d.properties.AUTHORITY);
+                    var percentages = getPercentages(that.yearsDiffAuthorities[auth]);
                     if ((percentages.parts.length > 0) && (percentages.percentage > 0))
                         fillColor = color(percentages.percentage);
                     return fillColor;
@@ -365,7 +375,13 @@ var Map = (function ($, d3, moment) {
             map.selectAll('.mint')
                 .data(that.mintsFeatures)
                 .each(function (mint) {
-                    var p = getPercentagesForMint(mint.properties.MINT);
+                    var m = mint.properties.MINT;
+
+                    // Compute the years difference if not done so already
+                    if (!(m in that.yearsDiffMints))
+                        that.yearsDiffMints[m] = getYearsDifferenceForMint(m);
+
+                    var p = getPercentages(that.yearsDiffMints[m]);
 
                     var arcs = d3.select(this)
                         .selectAll('.arc')
@@ -374,33 +390,25 @@ var Map = (function ($, d3, moment) {
                     arcs.enter()
                         .append('path')
                         .attr('class', 'arc')
-                        .attr('stroke', function (d) {
-                            if (d.startAngle === d.endAngle)
-                                return 'none';
-                            return pieColor;
-                        })
                         .attr('fill', function (d, i) {
                             return (i === 0) ? 'white' : pieColor;
                         });
 
-                    arcs.attr('d', pieArc);
+                    arcs.attr('d', pieArc)
+                        .attr('stroke', function (d) {
+                            if (d.startAngle === d.endAngle)
+                                return 'none';
+                            return pieColor;
+                        });
                 });
         }
 
         function onHoverAuthority(d) {
-            setInfoBlock(
-                getPercentagesForAuthority(d.properties.AUTHORITY),
-                d.properties.AUTHORITY,
-                'MINT'
-            );
+            setInfoBlock(getPercentages(that.yearsDiffAuthorities[d.properties.AUTHORITY]), d.properties.AUTHORITY);
         }
 
         function onHoverMint(d) {
-            setInfoBlock(
-                getPercentagesForMint(d.properties.MINT),
-                d.properties.MINT,
-                'AUTHORITY'
-            );
+            setInfoBlock(getPercentages(that.yearsDiffMints[d.properties.MINT]), d.properties.MINT);
         }
 
         function hideInfo() {
@@ -408,7 +416,7 @@ var Map = (function ($, d3, moment) {
                 info.selectAll('*').remove();
         }
 
-        function setInfoBlock(percentages, defaultLabel, labelKey) {
+        function setInfoBlock(percentages, defaultLabel) {
             if (isZooming)
                 return;
 
@@ -426,7 +434,7 @@ var Map = (function ($, d3, moment) {
                     height += (infoArcRadius * 2) + 10 + margin;
                 }
 
-                setInfo(width, height, part.percentage, part[labelKey], false);
+                setInfo(width, height, part.percentage, part.name, false);
             });
             height += (infoArcRadius * 2) + 10;
 
@@ -473,27 +481,25 @@ var Map = (function ($, d3, moment) {
                 });
         }
 
-        function getPercentagesForAuthority(authority) {
-            return getPercentages('AUTHORITY', 'MINT', authority, that.authorities);
+        function getYearsDifferenceForAuthority(authority) {
+            return getYearsDifference('AUTHORITY', 'MINT', authority, that.authorities);
         }
 
-        function getPercentagesForMint(mint) {
-            return getPercentages('MINT', 'AUTHORITY', mint, that.mints);
+        function getYearsDifferenceForMint(mint) {
+            return getYearsDifference('MINT', 'AUTHORITY', mint, that.mints);
         }
 
-        function getPercentages(keyFilter, keyObtain, value, props) {
-            // Make sure we have data to gain a coverage percentage
+        function getYearsDifference(keyFilter, keyObtain, value, props) {
+            // Make sure we have data to map the years difference
             if (value in props) {
-                // Collect all years to map
+                // Collect all the years that we should try to map
                 var yearsPerKey = {};
                 props[value].forEach(function (p) {
                     if (yearsPerKey[p[keyObtain]] === undefined)
-                        yearsPerKey[p[keyObtain]] = {years: [], totalYears: 0};
+                        yearsPerKey[p[keyObtain]] = {yearsBefore: [], yearsAfter: []};
 
-                    yearsPerKey[p[keyObtain]] = {
-                        years: p.years.concat(yearsPerKey[p[keyObtain]].years),
-                        totalYears: p.years.length + yearsPerKey[p[keyObtain]].totalYears
-                    };
+                    yearsPerKey[p[keyObtain]].yearsBefore = p.years.concat(yearsPerKey[p[keyObtain]].yearsBefore);
+                    yearsPerKey[p[keyObtain]].yearsAfter = yearsPerKey[p[keyObtain]].yearsBefore.slice(0);
                 });
 
                 // Try to map all the filtered data
@@ -503,13 +509,12 @@ var Map = (function ($, d3, moment) {
 
                         if (filterValues.indexOf(value) >= 0) {
                             var years = getYears(d.DATEfrom.year, d.DATEto.year);
+                            var allValues = getValues(d, keyObtain);
 
-                            // Go over all the years we have, and match these years with the years of the data
-                            $.forEachInObject(yearsPerKey, function (key, yearsObj) {
-                                // All years that match, remove those
-                                var obtainValues = getValues(d, keyObtain);
-                                if (obtainValues.indexOf(key) >= 0) {
-                                    yearsObj.years = yearsObj.years.filter(function (year) {
+                            // All years that we found in the filtered data, remove those from the list
+                            allValues.forEach(function (value) {
+                                if (value in yearsPerKey) {
+                                    yearsPerKey[value].yearsAfter = yearsPerKey[value].yearsAfter.filter(function (year) {
                                         return years.indexOf(year) < 0;
                                     });
                                 }
@@ -518,24 +523,45 @@ var Map = (function ($, d3, moment) {
                     }
                 });
 
-                // Whatever ranges we have left, are the ranges we could not map to the data
-                var percentages = [];
-                $.forEachInObject(yearsPerKey, function (key, yearsObj) {
-                    var obj = {percentage: 100 - Math.round(yearsObj.years.length / (yearsObj.totalYears / 100))};
-                    obj[keyObtain] = key;
-
-                    percentages.push(obj);
-                });
-
-                var total = percentages.reduce(function (t, p) {
-                    return t + p.percentage;
-                }, 0);
-                var avg = total / percentages.length;
-
-                return {percentage: avg, parts: percentages};
+                return yearsPerKey;
             }
 
-            return {percentage: 0, parts: []};
+            return [];
+        }
+
+        function getPercentages(yearsDifference) {
+            var percentages = [];
+
+            // Map the years difference for each part to a percentage
+            $.forEachInObject(yearsDifference, function (key, yearsObj) {
+                var percentage = null;
+                if (that.pctByYear) {
+                    if (yearsObj.yearsBefore.indexOf(lastYearVal) >= 0)
+                        percentage = (yearsObj.yearsAfter.indexOf(lastYearVal) >= 0) ? 0 : 100;
+                }
+                else
+                    percentage = 100 - Math.round(yearsObj.yearsAfter.length / (yearsObj.yearsBefore.length / 100));
+
+                if (percentage !== null)
+                    percentages.push({percentage: percentage, name: key});
+            });
+
+            // Sort the collected percentages parts, first by percentage, then by name
+            percentages.sort(function (a, b) {
+                if (a.percentage > b.percentage)
+                    return -1;
+                if (a.percentage < b.percentage)
+                    return 1;
+                return a.name.localeCompare(b.name);
+            });
+
+            // Then compute the total percentage
+            var total = percentages.reduce(function (t, p) {
+                return t + p.percentage;
+            }, 0);
+            var avg = (percentages.length > 0) ? (total / percentages.length) : 0;
+
+            return {percentage: avg, parts: percentages};
         }
 
         function getYears(from, to) {
@@ -568,6 +594,7 @@ var Map = (function ($, d3, moment) {
             map.selectAll('.authority')
                 .data(that.authoritiesFeatures)
                 .attr('visibility', function (d) {
+                    // Only show an authority, when it existed for the given year
                     if (d.properties.DATEfrom && d.properties.DATEto) {
                         var from = moment(d.properties.DATEfrom, 'YYYY/MM/DD');
                         var to = moment(d.properties.DATEto, 'YYYY/MM/DD');
@@ -582,17 +609,27 @@ var Map = (function ($, d3, moment) {
                 .data(that.mintsFeatures)
                 .attr('visibility', function (d) {
                     var visibility = 'hidden';
-                    that.mints[d.properties.MINT].forEach(function (props) {
-                        if (props.DATEfrom && props.DATEto) {
+
+                    // Only show a mint house, when it existed for the given year
+                    // or when it is among the filtered mints, if we only can show filtered mints
+                    if (!that.showFilteredMints || (that.values.MINT.indexOf(d.properties.MINT) >= 0)) {
+                        that.mints[d.properties.MINT].forEach(function (props) {
                             var from = moment(props.DATEfrom, 'YYYY/MM/DD');
                             var to = moment(props.DATEto, 'YYYY/MM/DD');
 
                             if ((year >= from.year()) && (year <= to.year()))
                                 visibility = 'visible';
-                        }
-                    });
+                        });
+                    }
+
                     return visibility;
                 });
+
+            // If we show a percentage by year, then also update those percentages for this year
+            if (that.pctByYear) {
+                updateAuthoritiesPercentages();
+                updateMintsPercentages();
+            }
         }
     };
 })(jQuery, d3, moment);

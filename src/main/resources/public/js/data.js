@@ -5,7 +5,8 @@ var Data = (function ($) {
     var that;
     var initializeCallbacks = [], refreshCallbacks = [], dataCallbacks = [];
 
-    return function (downloadElem, runElem, tableColumnsElem, xAxisElem, yAxisElem, variableElem) {
+    return function (downloadElem, runElem, tableColumnsElem, xAxisElem, yAxisElem, variableElem,
+                     pctByYearElem, showFilteredMintsElem) {
         that = this;
 
         this.variables = {
@@ -175,6 +176,8 @@ var Data = (function ($) {
         this.xAxis = $(xAxisElem);
         this.yAxis = $(yAxisElem);
         this.variable = $(variableElem);
+        this.pctByYear = $(pctByYearElem);
+        this.showFilteredMints = $(showFilteredMintsElem);
 
         this.onInitialize = function (callback) {
             initializeCallbacks.push(callback);
