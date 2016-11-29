@@ -55,7 +55,7 @@
 
     <build>
         <plugins>
-             For building WAR without Jetty servlet container
+            <!--For building WAR without Jetty servlet container-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
