@@ -67,6 +67,7 @@ var Map = (function ($, d3, moment) {
                 .on('zoom', zoomed)
         );
 
+        var sliderLeft = 70;
         var lastYearVal = yearRange.domain()[0];
         var drag = d3.behavior.drag()
             .on('dragstart', function () {
@@ -97,6 +98,7 @@ var Map = (function ($, d3, moment) {
 
         this.render = function () {
             if ($.isArray(this.data) && !$.isEmptyObject(this.authorities) && !$.isEmptyObject(this.mints)) {
+                updateSlider();
                 updateAuthoritiesPercentages();
                 updateMintsPercentages();
             }
@@ -138,7 +140,7 @@ var Map = (function ($, d3, moment) {
                         .on('mouseover', onHoverMint)
                         .on('mouseout', hideInfo);
 
-                    onYear(yearRange.domain()[0]);
+                    updateSlider();
                     updateAuthoritiesPercentages();
                     updateMintsPercentages();
                 });
@@ -216,10 +218,9 @@ var Map = (function ($, d3, moment) {
         }
 
         function createSlider() {
-            var left = 70;
             var slider = svg.append('g')
                 .attr('class', 'slider')
-                .attr('transform', 'translate(' + left + ',10)')
+                .attr('transform', 'translate(' + sliderLeft + ',10)')
                 .attr('pointer-events', 'all')
                 .style('cursor', 'crosshair')
                 .call(drag);
@@ -273,7 +274,7 @@ var Map = (function ($, d3, moment) {
 
             var handle = slider.insert('g', '.track-overlay').attr('class', 'handle');
 
-            var handleYear = handle.insert('text')
+            handle.insert('text')
                 .attr('class', 'handle-year')
                 .attr('text-anchor', 'middle')
                 .style('font-size', '10px')
@@ -297,15 +298,17 @@ var Map = (function ($, d3, moment) {
                 .attr('transform', 'translate(0,50)')
                 .style('font-size', '10px');
 
-            drag.on('drag', function () {
-                var x = d3.event.x - left;
-                lastYearVal = Math.round(yearRange.invert(x));
-                handleYear.text(lastYearVal);
-                handle.attr('transform', 'translate(' + yearRange(yearRange.invert(x)) + ',0)');
-                onYear(lastYearVal);
-            });
+            drag.on('drag', onDrag);
 
             return slider;
+        }
+
+        function onDrag() {
+            var x = (d3.event) ? d3.event.x - sliderLeft : 0;
+            lastYearVal = Math.round(yearRange.invert(x));
+            slider.select('.handle-year').text(lastYearVal);
+            slider.select('.handle').attr('transform', 'translate(' + yearRange(yearRange.invert(x)) + ',0)');
+            onYear(lastYearVal);
         }
 
         function createInfo() {
@@ -321,6 +324,20 @@ var Map = (function ($, d3, moment) {
 
                 var features = authorities.features.filter(function (feature) {
                     return (feature.properties !== undefined) && (feature.properties.AUTHORITY !== null);
+                });
+
+                that.minYearMap = null;
+                that.maxYearMap = null;
+                authorities.features.forEach(function (feature) {
+                    if (feature.properties.DATEfrom && feature.properties.DATEto) {
+                        var from = moment(feature.properties.DATEfrom, 'YYYY/MM/DD');
+                        var to = moment(feature.properties.DATEto, 'YYYY/MM/DD');
+
+                        that.minYearMap = (that.minYearMap === null) || (from.year() < that.minYearMap)
+                            ? from.year() : that.minYearMap;
+                        that.maxYearMap = (that.maxYearMap === null) || (to.year() > that.maxYearMap)
+                            ? to.year() : that.maxYearMap;
+                    }
                 });
 
                 callback(features);
@@ -362,6 +379,43 @@ var Map = (function ($, d3, moment) {
 
                 callback(features);
             });
+        }
+
+        function updateSlider() {
+            var minYearUser = (that.yearFrom) ? that.yearFrom : that.minYear;
+            var maxYearUser = (that.yearTo) ? that.yearTo : that.maxYear;
+
+            var minYear = (!$.isNumeric(minYearUser) || (that.minYearMap > minYearUser))
+                ? that.minYearMap : minYearUser;
+            var maxYear = (!$.isNumeric(maxYearUser) || (that.maxYearMap < maxYearUser))
+                ? that.maxYearMap : maxYearUser;
+
+            if (minYear !== maxYear) {
+                yearRange.domain([minYear, maxYear]);
+
+                var ticks = slider.select('.ticks');
+                ticks.selectAll('text').remove();
+
+                ticks.selectAll('text')
+                    .data(yearRange.ticks(5))
+                    .enter()
+                    .append('text')
+                    .attr('x', yearRange)
+                    .attr('text-anchor', 'middle')
+                    .style('font-size', '10px')
+                    .text(function (d) {
+                        return d;
+                    });
+
+                onDrag();
+                slider.attr('visibility', 'visible');
+            }
+            else {
+                lastYearVal = minYear;
+                slider.attr('visibility', 'hidden');
+            }
+
+            onYear(minYear);
         }
 
         function updateAuthoritiesPercentages() {
