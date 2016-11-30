@@ -78,9 +78,16 @@ var Map = (function ($, d3, moment) {
         var slider = createSlider();
         var info = createInfo();
 
-        this.update = function (data, values, pctByYear, showFilteredMints) {
+        this.update = function (data, values, minYear, maxYear, yearFrom, yearTo, pctByYear, showFilteredMints) {
             this.data = data;
             this.values = values;
+
+            this.minYear = minYear;
+            this.maxYear = maxYear;
+
+            this.yearFrom = parseInt(yearFrom);
+            this.yearTo = parseInt(yearTo);
+
             this.pctByYear = pctByYear;
             this.showFilteredMints = showFilteredMints;
 
@@ -501,9 +508,18 @@ var Map = (function ($, d3, moment) {
                 props[value].forEach(function (p) {
                     if (yearsPerKey[p[keyObtain]] === undefined)
                         yearsPerKey[p[keyObtain]] = {yearsBefore: [], yearsAfter: []};
-
                     yearsPerKey[p[keyObtain]].yearsBefore = p.years.concat(yearsPerKey[p[keyObtain]].yearsBefore);
-                    yearsPerKey[p[keyObtain]].yearsAfter = yearsPerKey[p[keyObtain]].yearsBefore.slice(0);
+                });
+
+                // Make sure the years are unique and remove all outside the range
+                $.forEachInObject(yearsPerKey, function (key, years) {
+                    var yearsFound = {};
+                    years.yearsBefore = years.yearsBefore.filter(function (year) {
+                        var isNotFound = yearsFound.hasOwnProperty(year) ? false : (yearsFound[year] = true);
+                        var isNotWithinRange = (that.yearFrom > year) || (that.yearTo < year);
+                        return isNotFound && !isNotWithinRange;
+                    });
+                    years.yearsAfter = years.yearsBefore.slice(0);
                 });
 
                 // Try to map all the filtered data
@@ -543,10 +559,15 @@ var Map = (function ($, d3, moment) {
                     if (yearsObj.yearsBefore.indexOf(lastYearVal) >= 0)
                         percentage = (yearsObj.yearsAfter.indexOf(lastYearVal) >= 0) ? 0 : 100;
                 }
-                else
+                else if (yearsObj.yearsAfter.length === yearsObj.yearsBefore.length) {
+                    percentage = 0;
+                }
+                else {
                     percentage = 100 - Math.round(yearsObj.yearsAfter.length / (yearsObj.yearsBefore.length / 100));
+                    percentage = (percentage === 0) ? 1 : percentage;
+                }
 
-                if (percentage !== null)
+                if ($.isNumeric(percentage))
                     percentages.push({percentage: percentage, name: key});
             });
 

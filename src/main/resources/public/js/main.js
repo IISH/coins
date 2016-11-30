@@ -27,7 +27,11 @@
 
         table.update(data.records, data.tableColumns.val());
         chart.update(data.records, data.xAxis.val(), data.yAxis.val(), data.variable.val());
-        map.update(data.records, data.values, data.pctByYear.is(':checked'), data.showFilteredMints.is(':checked'));
+        map.update(
+            data.records, data.values, data.minYear, data.maxYear,
+            $('input[name=from]').val(), $('input[name=to]').val(),
+            data.pctByYear.is(':checked'), data.showFilteredMints.is(':checked')
+        );
 
         if (tableTab.is(':visible'))
             renderTable();

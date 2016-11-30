@@ -10,8 +10,10 @@ import java.nio.charset.Charset;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -42,6 +44,7 @@ public class Csv {
      */
     public List<Record> parse(InputStream coinsStream, InputStream wagesStream) throws IOException {
         Map<String, Record> recordsById = new ConcurrentHashMap<>();
+        Map<String, String[]> recordLinks = new ConcurrentHashMap<>();
         Map<Integer, BigDecimal> wages = getWages(wagesStream);
 
         CSVParser parser = new CSVParser(new InputStreamReader(coinsStream, Charset.forName("UTF-8")), CSV_FORMAT);
@@ -71,12 +74,21 @@ public class Csv {
             record.setAlternativeCoinName(csvRecord.get("ALT_CoinNAME"));
             record.setAlternativeTypeId(csvRecord.get("ALT_TYPEID"));
 
+            // Also map each record by its id and record the links
+            recordsById.put(record.getId(), record);
+            if (csvRecord.get("LINK") != null)
+                recordLinks.put(record.getId(), csvRecord.get("LINK").split(","));
+
+            return record;
+        }).collect(Collectors.toList());
+
+        records.parallelStream().forEach(record -> {
             // Determine if we should base the quantity coins on the link
             if ((record.getQuantity() != null) && (record.getQuantity().compareTo(BigDecimal.ZERO) == 0)
-                    && (csvRecord.get("LINK") != null)) {
-                Stream.of(csvRecord.get("LINK").split(","))
+                    && (recordLinks.containsKey(record.getId()))) {
+                Stream.of(recordLinks.get(record.getId()))
                         .map(id -> recordsById.getOrDefault(id, null))
-                        .filter(linkRecord -> linkRecord != null)
+                        .filter(Objects::nonNull)
                         .forEach(linkRecord -> {
                             BigDecimal totalQuantity = linkRecord.getQuantity();
                             long totalDays = record.getTotalDays() + linkRecord.getTotalDays();
@@ -114,12 +126,7 @@ public class Csv {
                     record.setValueInHourlyWages(record.getValue().divide(averageWage, BigDecimal.ROUND_HALF_UP));
                 }
             }
-
-            // Also map each record by its id
-            recordsById.put(record.getId(), record);
-
-            return record;
-        }).collect(Collectors.toList());
+        });
 
         return records;
     }

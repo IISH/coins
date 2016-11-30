@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
@@ -76,6 +75,11 @@ public class Datasets {
         return cachedCsv;
     }
 
+    /**
+     * Obtains the latest GeoJSON with the authorities from Dataverse.
+     *
+     * @return The GeoJSON.
+     */
     public byte[] getGeoAuthorities() {
         if ((dateCachedGeoAuthorities == null) || dateCachedGeoAuthorities.isBefore(LocalDate.now().minusDays(1))) {
             try {
@@ -96,6 +100,11 @@ public class Datasets {
         return cachedGeoAuthorities;
     }
 
+    /**
+     * Obtains the latest GeoJSON with the mint houses from Dataverse.
+     *
+     * @return The GeoJSON.
+     */
     public byte[] getGeoMints() {
         if ((dateCachedGeoMints == null) || dateCachedGeoMints.isBefore(LocalDate.now().minusDays(1))) {
             try {

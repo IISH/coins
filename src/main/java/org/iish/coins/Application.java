@@ -142,7 +142,8 @@ public class Application implements SparkApplication {
     private RecordsHolder json(Request request, Response response) {
         List<Record> records = recordsFilter.getRecords(request);
         Map<String, Set<String>> values = recordsFilter.getValues(records);
-        return new RecordsHolder(records, values);
+        Integer[] minAndMaxYear = recordsFilter.getMinAndMaxYear(records);
+        return new RecordsHolder(records, values, minAndMaxYear[0], minAndMaxYear[1]);
     }
 
     /**

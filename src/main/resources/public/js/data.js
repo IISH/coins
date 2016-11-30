@@ -262,6 +262,8 @@ var Data = (function ($) {
             $.getJSON('json', params, function (data) {
                 that.values = data.values;
                 that.records = data.records;
+                that.minYear = data.minYear;
+                that.maxYear = data.maxYear;
 
                 dataCallbacks.forEach(function (callback) {
                     callback();
