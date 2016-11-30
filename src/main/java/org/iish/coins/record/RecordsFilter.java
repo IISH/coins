@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
@@ -89,6 +90,27 @@ public class RecordsFilter {
         });
 
         return values;
+    }
+
+    /**
+     * For the given list of filtered records, return the minimum and maximum found year.
+     *
+     * @param filteredRecords The list with filtered records.
+     * @return An array with on index 0 the minimum year and on index 1 the maximum year.
+     */
+    public Integer[] getMinAndMaxYear(List<Record> filteredRecords) {
+        List<Integer> years = filteredRecords.stream()
+                .flatMapToInt(record -> {
+                    Integer fromYear = (record.getDateFrom() != null) ? record.getDateFrom().getYear() : null;
+                    Integer toYear = (record.getDateTo() != null) ? record.getDateTo().getYear() : null;
+                    return IntStream.of(fromYear, toYear);
+                })
+                .boxed()
+                .collect(Collectors.toList());
+
+        if (years.isEmpty())
+            return new Integer[]{null, null};
+        return new Integer[]{Collections.min(years), Collections.max(years)};
     }
 
     /**
