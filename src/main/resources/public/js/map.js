@@ -55,17 +55,16 @@ var Map = (function ($, d3, moment) {
             .innerRadius(0);
 
         var isZooming = false;
-        svg.call(
-            d3.behavior.zoom()
-                .scaleExtent([1, 8])
-                .on('zoomstart', function () {
-                    isZooming = true;
-                })
-                .on('zoomend', function () {
-                    isZooming = false;
-                })
-                .on('zoom', zoomed)
-        );
+        var zoom = d3.behavior.zoom()
+            .scaleExtent([1, 8])
+            .on('zoomstart', function () {
+                isZooming = true;
+            })
+            .on('zoomend', function () {
+                isZooming = false;
+            })
+            .on('zoom', zoomed);
+        svg.call(zoom);
 
         var sliderLeft = 70;
         var lastYearVal = yearRange.domain()[0];
@@ -77,6 +76,7 @@ var Map = (function ($, d3, moment) {
         var map = createMap();
         var legend = createLegend();
         var slider = createSlider();
+        var zoomBtns = createZoomBtns();
         var info = createInfo();
 
         this.update = function (data, values, minYear, maxYear, yearFrom, yearTo, pctByYear, showFilteredMints) {
@@ -309,6 +309,62 @@ var Map = (function ($, d3, moment) {
             slider.select('.handle-year').text(lastYearVal);
             slider.select('.handle').attr('transform', 'translate(' + yearRange(yearRange.invert(x)) + ',0)');
             onYear(lastYearVal);
+        }
+
+        function createZoomBtns() {
+            var zoomBtns = $(
+                '<div style="position:absolute;top:10px;right:10px;">' +
+                '<button class="btn btn-sm btn-default zoom-in" style="margin-right:10px;">' +
+                '<span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button>' +
+                '<button class="btn btn-sm btn-default zoom-reset" style="margin-right:10px;">' +
+                '<span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>' +
+                '<button class="btn btn-sm btn-default zoom-out">' +
+                '<span class="glyphicon glyphicon-minus" aria-hidden="true"></span></button>' +
+                '</div>'
+            ).appendTo(that.elem);
+
+            d3.select('.zoom-in').on('click', function () {
+                zoomClick(1);
+            });
+
+            d3.select('.zoom-reset').on('click', function () {
+                zoomClick(0);
+            });
+
+            d3.select('.zoom-out').on('click', function () {
+                zoomClick(-1);
+            });
+
+            return zoomBtns;
+        }
+
+        function zoomClick(direction) {
+            d3.event.preventDefault();
+
+            var scale = (direction === 0) ? 1 : zoom.scale() * (1 + (0.1 * direction));
+            if (scale < zoom.scaleExtent()[0] || scale > zoom.scaleExtent()[1])
+                return false;
+
+            var translate = [0, 0];
+            if (direction !== 0) {
+                var center = [width / 2, height / 2];
+                var orgTranslate = [
+                    (center[0] - zoom.translate()[0]) / zoom.scale(),
+                    (center[1] - zoom.translate()[1]) / zoom.scale()
+                ];
+                var newTranslate = [
+                    orgTranslate[0] * scale + zoom.translate()[0],
+                    orgTranslate[1] * scale + zoom.translate()[1]
+                ];
+
+                translate = [
+                    zoom.translate()[0] + center[0] - newTranslate[0],
+                    zoom.translate()[1] + center[1] - newTranslate[1]
+                ];
+            }
+
+            zoom.translate(translate).scale(scale);
+            zoomed(translate, scale);
         }
 
         function createInfo() {
@@ -663,10 +719,13 @@ var Map = (function ($, d3, moment) {
             });
         }
 
-        function zoomed() {
-            map.attr('transform', 'translate(' + d3.event.translate + ') scale(' + d3.event.scale + ')');
-            map.selectAll('.authority').style('stroke-width', 1 / d3.event.scale + 'px');
-            map.selectAll('.mint').style('stroke-width', 1 / d3.event.scale + 'px');
+        function zoomed(translate, scale) {
+            translate = (d3.event && d3.event.translate) ? d3.event.translate : translate;
+            scale = (d3.event && d3.event.scale) ? d3.event.scale : scale;
+
+            map.attr('transform', 'translate(' + translate + ') scale(' + scale + ')');
+            map.selectAll('.authority').style('stroke-width', 1 / scale + 'px');
+            map.selectAll('.mint').style('stroke-width', 1 / scale + 'px');
         }
 
         function onYear(year) {
