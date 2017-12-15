@@ -236,7 +236,7 @@ var Data = (function ($) {
                 });
 
             $(downloadElem).click(function () {
-                window.open('/csv?' + $.param(getParams()));
+                window.open('csv?' + $.param(getParams()));
             });
 
             $(runElem).click(function () {
