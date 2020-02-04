@@ -66,10 +66,10 @@ public class DataverseApiClient {
                     .getAsJsonObject("latestVersion")
                     .getAsJsonArray("files")
                     .forEach(file -> {
-                        JsonObject dataFile = file.getAsJsonObject().getAsJsonObject("datafile");
-                        if ((label == null) || dataFile.get("name").getAsString().equalsIgnoreCase(label)) {
+                        JsonObject dataFile = file.getAsJsonObject().getAsJsonObject("dataFile");
+                        if ((label == null) || dataFile.get("filename").getAsString().equalsIgnoreCase(label)) {
                             files.add(new DataverseFile(
-                                    dataFile.get("id").getAsLong(), dataFile.get("name").getAsString()
+                                    dataFile.get("id").getAsLong(), dataFile.get("filename").getAsString()
                             ));
                         }
                     });
