@@ -90,7 +90,7 @@ public class DataverseApiClient {
      */
     public InputStream getFileById(long id) throws DataverseException {
         try {
-            URL url = new URL(this.url + API_ACCESS_DATAFILE + id + "?format=original");
+            URL url = new URL(this.url + API_ACCESS_DATAFILE + id);
             HttpURLConnection connection = getConnection(url);
 
             if (connection.getResponseCode() != 200) {
