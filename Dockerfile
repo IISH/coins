@@ -11,9 +11,7 @@ RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../*.jar)
 
 FROM openjdk:11-jdk-slim
 
-COPY --from=build /app/target/classes /app
-#COPY --from=build /app/target/dependency/BOOT-INF/lib /app/lib
-#COPY --from=build /app/target/dependency/META-INF /app/META-INF
+COPY --from=build /app/target/dependency /app
 
 EXPOSE 8080
 
