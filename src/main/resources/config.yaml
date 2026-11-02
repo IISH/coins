@@ -1,22 +1,22 @@
 # Dataverse API configuration
 dataverse:
-  url: https://datasets.iisg.amsterdam
+  url: https://dataverse.nl
   connectTimeoutMs: 5000
   readTimeoutMs: 10000
 
 # The datasets from Dataverse
 datasets:
   coins:
-    pid: "10622/D5WXZZ"
+    pid: "10.34894/BFIEKD"
     label: "_Combined.csv"
   wages:
-    pid: "10622/D5WXZZ"
+    pid: "10.34894/BFIEKD"
     label: "Wage series (dummy).tab"
   geoMint:
-    pid: "10622/MLVN7A"
+    pid: "10.34894/1NWHJB"
     label: "Mint houses.geojson"
   geoAuthorities:
-    pid: "10622/HPIC74"
+    pid: "10.34894/PB9AT3"
     label: "Mint authorities.geojson"
 
 # Fields of the CSV
